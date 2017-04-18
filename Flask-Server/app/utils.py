@@ -8,7 +8,6 @@ isValid = lambda x, y: len(x) == y and x.isdigit()
 
 # 检查短信验证码, 10分钟内有效
 def checkSmsNum(mobile, code):
-    print mobile_code
     if isValid(mobile, 11) and isValid(code, 6):
         info = mobile_code.get(mobile, None)
         if info != None and info.get('code', '0') == int(code):
