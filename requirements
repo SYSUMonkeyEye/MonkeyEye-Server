@@ -4,6 +4,8 @@ Flask-MySQLdb==0.2.0
 Flask-Restless==0.17.0
 flask-restless-swagger==0.2.1
 Flask-SQLAlchemy==2.2
+gevent==1.2.1
+greenlet==0.4.12
 gunicorn==19.7.1
 itsdangerous==0.24
 Jinja2==2.9.6

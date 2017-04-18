@@ -17,12 +17,12 @@ def checkSmsNum(mobile, code):
                 mobile_code.pop(mobile)
                 return 'Pass'
 
-            return 'Expired Code'
+            return 'Expired'
 
-    return 'Invalid Args'
+    return 'Invalid'
 
 
-#  每格一个小时删除已过期的手机信息
+#  每隔一个小时删除已过期的手机信息
 def _popExpiredItems():
     expired = []
     for mobile in mobile_code:
