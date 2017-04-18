@@ -1,7 +1,4 @@
 from flask import Blueprint
-
-from app.api import smsnum
-
 user = Blueprint('user', __name__)
 
 
