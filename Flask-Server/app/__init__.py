@@ -2,9 +2,8 @@
 from flask import Flask
 from database import db
 from database import models
-from api.user import user
-from api.smscode import smscode
 from config import config
+from api import api
 
 
 def create_app(config_name):
@@ -12,9 +11,7 @@ def create_app(config_name):
     app.config.from_object(config[config_name])  # 加载普通配置
     app.config.from_pyfile('config.py')  # 加载私密配置 instance/config.py
     config[config_name].init_app(app)
-
-    app.register_blueprint(user)
-    app.register_blueprint(smscode)
+    api.init_app(app)
 
     # 创建数据表
     db.app = app

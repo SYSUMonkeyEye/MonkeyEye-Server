@@ -2,6 +2,8 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     PERMANENT_SESSION_LIFETIME = 3600 * 24 * 15
+    RESTPLUS_MASK_SWAGGER = False
+    ERROR_404_HELP = False
 
     def __init__(self):
         pass

@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 from . import db
 from uuid import uuid4
+from hashlib import md5
+
 
 class User(db.Model):
     id = db.Column(db.String(11), primary_key=True)
+    password = db.Column(db.String(32))
     name = db.Column(db.String(20))
 
-    def __init__(self, id, name='猿眼用户'):
+    def __init__(self, id, password, name='猿眼用户'):
         self.id = id
+        self.password = md5(password).hexdigest()
         self.name = name
 
     def __repr__(self):
