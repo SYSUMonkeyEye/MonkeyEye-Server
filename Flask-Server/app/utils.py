@@ -22,7 +22,7 @@ def checkSmsNum(mobile, code):
 
 
 #  每隔一个小时删除已过期的手机信息
-def _popExpiredItems():
+def __popExpiredItems():
     expired = []
     for mobile in mobile_code:
         now = datetime.now()
@@ -35,8 +35,10 @@ def _popExpiredItems():
         mobile_code.pop(mobile)
 
     time.sleep(3600)
-    _popExpiredItems()
+    __popExpiredItems()
+
 
 # 定时器，新开线程，避免阻塞主进程
 from threading import Timer
-Timer(0, _popExpiredItems).start()
+
+Timer(0, __popExpiredItems).start()

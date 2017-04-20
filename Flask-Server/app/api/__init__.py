@@ -6,9 +6,10 @@ from session import api as ns2
 api = Api(
     title='MonkeyEye',
     version='1.0',
-    description='猿眼电影售票系统API',
+    description='猿眼电影订票系统API',
     doc='/swagger/',
-    catch_all_404s=True
+    catch_all_404s=True,
+    serve_challenge_on_401=True
 )
 
 api.add_namespace(ns1, path='/api/smscode')
