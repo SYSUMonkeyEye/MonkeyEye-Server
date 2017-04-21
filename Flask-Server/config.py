@@ -4,6 +4,8 @@ class Config:
     PERMANENT_SESSION_LIFETIME = 3600 * 24 * 15
     RESTPLUS_MASK_SWAGGER = False
     ERROR_404_HELP = False
+    SESSION_REFRESH_EACH_REQUEST = False
+    SESSION_COOKIE_SECURE = True
 
     def __init__(self):
         pass

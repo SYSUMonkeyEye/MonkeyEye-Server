@@ -4,16 +4,17 @@ from flask import Flask
 from database import db
 from config import config
 from database import models
+from functools import wraps
+from flask_httpauth import HTTPBasicAuth
+
+__auth = HTTPBasicAuth()
 
 
 def __swagger_auth(app):
     """返回一个装饰器, swagger页面需要认证, 其他页面不做处理"""
-    from functools import wraps
-    from flask_httpauth import HTTPBasicAuth
-    auth = HTTPBasicAuth()
 
     # 身份验证
-    @auth.verify_password
+    @__auth.verify_password
     def verify_password(username, password):
         return username == app.config['ADMIN_USERNAME'] and \
                password == app.config['ADMIN_PASSWORD']
@@ -24,7 +25,7 @@ def __swagger_auth(app):
             return func(*args, **kwargs)
 
         @wraps(func)
-        @auth.login_required
+        @__auth.login_required
         def login_required(*args, **kwargs):
             return func(*args, **kwargs)
 

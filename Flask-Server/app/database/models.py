@@ -8,11 +8,13 @@ class User(db.Model):
     id = db.Column(db.String(11), primary_key=True)
     password = db.Column(db.String(32))
     name = db.Column(db.String(20))
+    avatar = db.Column(db.String(32))
 
-    def __init__(self, id, password, name='猿眼用户'):
+    def __init__(self, id, password, name='猿眼用户', avatar='MonkeyEye'):
         self.id = id
         self.password = md5(password).hexdigest()
         self.name = name
+        self.avatar = avatar
 
     def __repr__(self):
         return '<User %r, mobile %r>' % (self.username, self.id)

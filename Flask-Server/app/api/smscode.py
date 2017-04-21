@@ -14,11 +14,10 @@ api = Namespace('smscode', description='短信验证码模块')
 
 
 @api.route('/')
-@api.doc(params={'mobile': '手机号码'})
 class SmsCode(Resource):
+    @api.doc(parser=api.parser().add_argument('mobile', type=str, required=True, help='手机号码', location='args'))
     def get(self):
         """获取短信验证码"""
-
         mobile = request.args.get('mobile', '')
         if utils.isValid(mobile, 11):
             info = mobile_code.get(mobile, None)

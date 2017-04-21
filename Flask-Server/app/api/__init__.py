@@ -1,7 +1,8 @@
 # *-* coding: utf-8 *-*
 from flask_restplus import Api
-from smscode import api as ns1
+from user import api as ns1
 from session import api as ns2
+from smscode import api as ns3
 
 api = Api(
     title='MonkeyEye',
@@ -12,5 +13,6 @@ api = Api(
     serve_challenge_on_401=True
 )
 
-api.add_namespace(ns1, path='/api/smscode')
+api.add_namespace(ns1, path='/api/users')
 api.add_namespace(ns2, path='/api/session')
+api.add_namespace(ns3, path='/api/smscode')
