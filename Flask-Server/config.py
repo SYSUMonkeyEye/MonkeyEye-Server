@@ -22,6 +22,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+    HOST = '0.0.0.0'
 
 
 config = {

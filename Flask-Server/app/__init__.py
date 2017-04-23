@@ -1,23 +1,21 @@
 # *-* coding: utf-8 *-*
+import models
 from api import api
+from admin import admin
 from flask import Flask
-from database import db
 from config import config
-from database import models
 from functools import wraps
 from flask_httpauth import HTTPBasicAuth
-
-__auth = HTTPBasicAuth()
 
 
 def __swagger_auth(app):
     """返回一个装饰器, swagger页面需要认证, 其他页面不做处理"""
+    __auth = HTTPBasicAuth()
 
     # 身份验证
     @__auth.verify_password
     def verify_password(username, password):
-        return username == app.config['ADMIN_USERNAME'] and \
-               password == app.config['ADMIN_PASSWORD']
+        return (username, password) == app.config['ADMIN_CREDENTIALS']
 
     def swagger_login(func):
         @wraps(func)
@@ -44,8 +42,10 @@ def create_app(config_name):
     api.init_app(app)
 
     # 创建数据表
-    db.app = app
-    db.init_app(app)
-    db.create_all()
+    models.db.app = app
+    models.db.init_app(app)
+    models.db.create_all()
+
+    admin.init_app(app)
 
     return app
