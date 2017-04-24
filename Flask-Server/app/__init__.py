@@ -38,14 +38,16 @@ def create_app(config_name):
     app.config.from_pyfile('config.py')  # 加载私密配置 instance/config.py
     config[config_name].init_app(app)
 
-    api.decorators = [__swagger_auth(app)]  # swagger页面需要认证
-    api.init_app(app)
-
     # 创建数据表
     models.db.app = app
     models.db.init_app(app)
     models.db.create_all()
 
+
+
     admin.init_app(app)
+
+    api.decorators = [__swagger_auth(app)]  # swagger页面需要认证
+    api.init_app(app)
 
     return app
