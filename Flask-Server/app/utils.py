@@ -1,10 +1,14 @@
 # *-* coding: utf-8 *-*
 import time
+from hashlib import md5
 from datetime import datetime
 
 mobile_code = {}
 isValid = lambda x, y: len(x) == y and x.isdigit()
 
+# 两次md5
+def MD5Twice(password):
+    return md5(md5(password).hexdegist()).hexdigest()
 
 # 检查短信验证码, 10分钟内有效
 def checkSmsNum(mobile, code):

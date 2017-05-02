@@ -1,29 +1,21 @@
 # *-* coding: utf-8 *-*
-import models
 from api import api
-from admin import admin
+from models import *
 from flask import Flask
 from config import config
+from utils import MD5Twice
 from functools import wraps
-from flask_httpauth import HTTPBasicAuth
+from admin import admin, init_login, login
 
 
 def __swagger_auth(app):
-    """返回一个装饰器, swagger页面需要认证, 其他页面不做处理"""
-    __auth = HTTPBasicAuth()
-
-    # 身份验证
-    @__auth.verify_password
-    def verify_password(username, password):
-        return (username, password) == app.config['ADMIN_CREDENTIALS']
-
     def swagger_login(func):
         @wraps(func)
         def login_pass(*args, **kwargs):
             return func(*args, **kwargs)
 
         @wraps(func)
-        @__auth.login_required
+        @login.login_required
         def login_required(*args, **kwargs):
             return func(*args, **kwargs)
 
@@ -39,12 +31,20 @@ def create_app(config_name):
     config[config_name].init_app(app)
 
     # 创建数据表
-    models.db.app = app
-    models.db.init_app(app)
-    models.db.create_all()
+    db.app = app
+    db.init_app(app)
+    db.create_all()
 
+    if User.query.filter_by(id=app.config['ADMIN_CREDENTIALS'][0]).first() is None:
+        user = User()
+        user.id = app.config['ADMIN_CREDENTIALS'][0]
+        user.password = MD5Twice(app.config['ADMIN_CREDENTIALS'][1])
+        user.isAdmin = 1
+        user.nickname = '管理员'
+        db.session.add(user)
+        db.session.commit()
 
-
+    init_login(app)
     admin.init_app(app)
 
     api.decorators = [__swagger_auth(app)]  # swagger页面需要认证

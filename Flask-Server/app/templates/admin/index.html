@@ -1,0 +1,55 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+{{ super() }}
+
+<script src='{{ url_for('static', filename='js/md5.min.js') }}'></script>
+<script src='{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}'></script>
+<script>
+$(function(){
+  $("#form").submit(function() {
+    var hash = md5($("#password").val());
+      console.log(hash)
+    $("#hash").val(hash);
+    $("#password").attr("disabled", "true");
+    return true;
+  });
+});
+</script>
+<div class="container">
+    <div class="row clearfix">
+        <div class="col-md-4 column"></div>
+        {% if current_user.is_authenticated %}
+            <h2>欢迎回来</h2>
+            <p class="lead">
+                <a href="/swagger">Swagger传送门>>></a>
+            </p>
+        {% else %}
+            <div class="col-md-4 column">
+                {% for f in form if f.type != 'CSRFTokenField' %}
+                    {% if f.errors %}
+                        <div class="alert alert-warning">
+                        {{ ''.join(f.errors) }}
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <form role="form" action="" id="form" method="POST">
+                    {{ form.hidden_tag() if form.hidden_tag }}
+
+                    {% for f in form if f.type != 'CSRFTokenField' %}
+                        <div class="form-group">
+                            <label for='{{ f.label }}'>{{ f.label }}</label>
+                            <input class="form-control" class="form-control"
+                                   name='{{ f.name }}' id='{{ f.id }}' required value=""
+                                   type='{{"text" if f.type != "PasswordField" else "password" }}'/>
+                        </div>
+                    {% endfor %}
+                    <input type="password" hidden="true" name="password" id="hash">
+                    <input type="submit" class="btn btn-primary btn-block btn-default btn-info">
+                </form>
+            {% endif %}
+        </div>
+        <div class="col-md-4 column"></div>
+    </div>
+</div>
+{% endblock body %}
