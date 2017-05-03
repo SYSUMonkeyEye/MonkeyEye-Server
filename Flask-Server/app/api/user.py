@@ -12,7 +12,7 @@ api = Namespace('user', description='用户模块')
 class UsersResource(Resource):
     @api.doc(parser=api.parser()
              .add_argument('id', required=True, help='手机号码', location='form')
-             .add_argument('password', required=True, help='密码的MD5摘要', location='form')
+             .add_argument('password', required=True, help='密码的md5值', location='form')
              .add_argument('smscode', required=True, help='短信验证码', location='form'))
     def post(self):
         """用户注册"""
@@ -63,7 +63,7 @@ class UserResource(Resource):
              .add_argument('avatar', help='头像', location='files'))
 
     @login_required
-    def put(self, id):
+    def patch(self, id):
         """修改用户信息"""
         if not current_user.isAdmin and current_user.id != id:
             return {'message': 'Forbidden'}, 403

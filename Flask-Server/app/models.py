@@ -27,7 +27,7 @@ class User(UserMixin, db.Model):
     def __json__(self):
         return dict(id=self.id,
                       nickname=self.nickname,
-                      avatar='static/images/user/%s.jpg' % self.avatar,
+                      avatar='static/images/user/%s' % self.avatar,
                       description=self.description)
 
 class Movie(db.Model):
