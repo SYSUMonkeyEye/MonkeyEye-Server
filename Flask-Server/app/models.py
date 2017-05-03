@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.String(11), primary_key=True, doc='手机号码')
     password = db.Column(db.String(32), nullable=False, doc='密码')
     nickname = db.Column(db.String(20), default='猿眼用户', nullable=False, doc='昵称')
-    avatar = db.Column(db.String(32), default='MonkeyEye', nullable=False, doc='头像路径')
+    avatar = db.Column(db.String(20), default='MonkeyEye.jpg', nullable=False, doc='头像路径')
     description = db.Column(db.String(50), default='这个人很懒，什么也没留下', nullable=False, doc='个性签名')
     isAdmin = db.Column(db.Boolean, default=False, nullable=False, doc='是否管理员')
 

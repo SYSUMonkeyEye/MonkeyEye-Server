@@ -7,6 +7,7 @@ Flask-Login==0.4.0
 flask-restplus==0.10.1
 Flask-SQLAlchemy==2.2
 functools32==3.2.3.post2
+gunicorn==19.7.1
 itsdangerous==0.24
 Jinja2==2.9.6
 jsonschema==2.6.0
