@@ -1,27 +1,20 @@
 # *-* coding: utf-8 *-*
 from api import api
 from models import *
-from flask import Flask
+from flask import Flask, redirect
 from config import config
-from utils import MD5Twice
 from functools import wraps
+from utils import MD5Twice, isAdmin
 from admin import admin, init_login, login
 
+def swagger_login(func):
+    @wraps(func)
+    def login_pass(*args, **kwargs):
+        return func(*args, **kwargs)
 
-def __swagger_auth(app):
-    def swagger_login(func):
-        @wraps(func)
-        def login_pass(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        @wraps(func)
-        @login.login_required
-        def login_required(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        return login_required if func.func_name == 'specs' else login_pass
-
-    return swagger_login
+    if isAdmin() or func.func_name != 'specs':
+        return login_pass
+    return login.login_required(func)
 
 
 def create_app(config_name):
@@ -35,11 +28,11 @@ def create_app(config_name):
     db.init_app(app)
     db.create_all()
 
-    if User.query.filter_by(id=app.config['ADMIN_CREDENTIALS'][0]).first() is None:
+    if User.query.filter_by(id=app.config['ADMIN'][0]).first() is None:
         user = User()
-        user.id = app.config['ADMIN_CREDENTIALS'][0]
-        user.password = MD5Twice(app.config['ADMIN_CREDENTIALS'][1])
-        user.isAdmin = 1
+        user.id = app.config['ADMIN'][0]
+        user.password = MD5Twice(app.config['ADMIN'][1])
+        user.isAdmin = True
         user.nickname = '管理员'
         db.session.add(user)
         db.session.commit()
@@ -47,7 +40,7 @@ def create_app(config_name):
     init_login(app)
     admin.init_app(app)
 
-    api.decorators = [__swagger_auth(app)]  # swagger页面需要认证
+    api.decorators = [swagger_login]  # swagger页面需要认证
     api.init_app(app)
 
     return app

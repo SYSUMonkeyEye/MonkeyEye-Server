@@ -1,8 +1,8 @@
 # *-* coding: utf-8 *-*
 from models import *
 from hashlib import md5
-from utils import MD5Twice
 import flask_login as login
+from utils import MD5Twice, isAdmin
 from wtforms import form, fields, validators
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
@@ -75,7 +75,7 @@ class CommentModelView(MyModelView):
 class MyAdminIndexView(AdminIndexView):
     @expose('/')
     def index(self):
-        if not login.current_user.is_authenticated:
+        if not isAdmin():
             return redirect(url_for('.login_view'))
         return super(MyAdminIndexView, self).index()
 
@@ -87,14 +87,15 @@ class MyAdminIndexView(AdminIndexView):
             user = form.get_user()
             login.login_user(user)
 
-        if login.current_user.is_authenticated:
+        if isAdmin():
             return redirect(url_for('.index'))
 
         self._template_args['form'] = form
         return super(MyAdminIndexView, self).index()
 
     @expose('/logout/')
-    @login.login_required
     def logout_view(self):
-        login.logout_user()
+        if isAdmin():
+            login.logout_user()
+
         return redirect(url_for('.login_view'))

@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     """用户"""
     __tablename__ = 'users'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
@@ -17,25 +17,18 @@ class User(db.Model):
     nickname = db.Column(db.String(20), default='猿眼用户', nullable=False, doc='昵称')
     avatar = db.Column(db.String(32), default='MonkeyEye', nullable=False, doc='头像路径')
     description = db.Column(db.String(50), default='这个人很懒，什么也没留下', nullable=False, doc='个性签名')
-    isAdmin = db.Column(db.Boolean, default=False, nullable=0, doc='是否管理员')
+    isAdmin = db.Column(db.Boolean, default=False, nullable=False, doc='是否管理员')
 
     orders = db.relationship('Order', backref='users', lazy='dynamic')
     coupons = db.relationship('Coupon', backref='users', lazy='dynamic')
     favorites = db.relationship('Favorite', backref='users', lazy='dynamic')
     comments = db.relationship('Comment', backref='users', lazy='dynamic')
 
-    def is_active(self):
-        return True
-
-    def is_authenticated(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return self.id
-
+    def __json__(self):
+        return dict(id=self.id,
+                      nickname=self.nickname,
+                      avatar='static/images/user/%s.jpg' % self.avatar,
+                      description=self.description)
 
 class Movie(db.Model):
     """电影"""

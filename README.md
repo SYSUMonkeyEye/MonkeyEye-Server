@@ -16,7 +16,7 @@ virtualenv venv
 source venv/bin/activate       # Linux 下
 venv\scripts\activate          # Windows 下
 ```
-4. 安装第三方模块
+4. 安装第三方模块，如果`MySQLdb`模块安装不成功，先运行命令`sudo apt-get install mysql++-devel`安装依赖
 ```
 pip install -r requirements
 ```
@@ -38,6 +38,5 @@ SECRET_KEY =
 SQLALCHEMY_DATABASE_URI = 
 APPKEY = 
 APPSECRET = 
-ADMIN_USERNAME = 
-ADMIN_PASSWORD = 
+ADMIN = 
 ```
