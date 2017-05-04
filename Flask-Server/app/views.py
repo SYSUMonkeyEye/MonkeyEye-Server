@@ -2,11 +2,13 @@
 from models import *
 from hashlib import md5
 import flask_login as login
-from utils import MD5Twice, isAdmin
-from wtforms import form, fields, validators
+from flask import current_app
+from utils import MD5Twice, isAdmin, isValid
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import expose, AdminIndexView, helpers
+from wtforms import form, fields, validators, ValidationError
+
 
 class LoginForm(form.Form):
     """登录表单"""
@@ -29,23 +31,52 @@ class MyModelView(ModelView):
     column_display_pk = True  # 显示主键
 
     def is_accessible(self):
-        return login.current_user.is_authenticated
+        return isAdmin()
 
 
 class UserModelView(MyModelView):
     column_exclude_list = ('password', 'isAdmin')  # 不显示密码
     form_edit_rules = ('nickname', 'avatar', 'description')  # 可编辑的字段
     form_columns = ('id', 'password', 'nickname', 'avatar', 'description')  # 可插入的字段
+    form_overrides = {'avatar': fields.FileField}
+    form_args = {'id': dict(validators=[validators.Regexp('\d{11}', message='Invalid mobile')])}
 
-    def on_model_change(self, form, User, is_created=False):
-        """新建用户时进行密码哈希"""
-        if is_created:
-            User.password = MD5Twice(form.password.data)
+    def on_model_change(self, form, user, is_created=False):
+        avatar = form.avatar.data
+        if avatar.content_type.startswith('image/'):
+            filename = avatar.filename
+            filename = "%s%s" % (user.id, filename[filename.rindex('.'):])
+            avatar.save('%s/images/user/%s' % (current_app.static_folder, filename))
+            user.avatar = filename
+        elif is_created:
+            user.avatar = 'MonkeyEye.jpg'
+        else:
+            user.avatar = form.avatar.object_data
+
+        if is_created:  # 新建用户时密码进行两次md5
+            user.password = MD5Twice(form.password.data)
 
 
 class MovieModelView(MyModelView):
     # 可插入和编辑字段
     form_columns = ('name', 'poster', 'description', 'playingTime', 'duration', 'movieType', 'playingType')
+    form_overrides = dict(poster=fields.FileField)
+
+    def on_model_change(self, form, movie, is_created=False):
+        poster = form.poster.data
+        movie.id = uuid4().hex if is_created else movie.id
+        if poster.content_type.startswith('image/'):
+            filename = poster.filename
+            filename = "%s%s" % (movie.id, filename[filename.rindex('.'):])
+            poster.save('%s/images/poster/%s' % (current_app.static_folder, filename))
+            movie.poster = filename
+        elif is_created:
+            raise ValidationError("poster required")
+        else:
+            movie.poster = form.poster.object_data
+
+        if form.description.data.strip() == '':
+            movie.description = '暂无介绍'
 
 
 class RecommendModelView(MyModelView):

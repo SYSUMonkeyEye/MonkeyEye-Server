@@ -12,12 +12,12 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(11), primary_key=True, doc='手机号码')
-    password = db.Column(db.String(32), nullable=False, doc='密码')
-    nickname = db.Column(db.String(20), default='猿眼用户', nullable=False, doc='昵称')
-    avatar = db.Column(db.String(20), default='MonkeyEye.jpg', nullable=False, doc='头像路径')
-    description = db.Column(db.String(50), default='这个人很懒，什么也没留下', nullable=False, doc='个性签名')
-    isAdmin = db.Column(db.Boolean, default=False, nullable=False, doc='是否管理员')
+    id = db.Column(db.String(11), doc='手机号码', primary_key=True)
+    password = db.Column(db.String(32), doc='密码', nullable=False)
+    nickname = db.Column(db.String(20), doc='昵称', default='猿眼用户', nullable=False)
+    avatar = db.Column(db.String(20), doc='头像路径', default='MonkeyEye.jpg')
+    description = db.Column(db.String(50), doc='个性签名', default='这个人很懒，什么也没留下', nullable=False)
+    isAdmin = db.Column(db.Boolean, doc='是否管理员', default=False)
 
     orders = db.relationship('Order', backref='users', lazy='dynamic')
     coupons = db.relationship('Coupon', backref='users', lazy='dynamic')
@@ -25,10 +25,13 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', backref='users', lazy='dynamic')
 
     def __json__(self):
-        return dict(id=self.id,
-                      nickname=self.nickname,
-                      avatar='static/images/user/%s' % self.avatar,
-                      description=self.description)
+        return {
+            'id': self.id,
+            'nickname': self.nickname,
+            'avatar': 'static/images/user/%s' % self.avatar,
+            'description': self.description
+        }
+
 
 class Movie(db.Model):
     """电影"""
@@ -36,15 +39,15 @@ class Movie(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    name = db.Column(db.String(30), nullable=False, doc='电影名称')
-    poster = db.Column(db.String(50), nullable=False, doc='海报路径')
-    description = db.Column(db.Text, default='暂无介绍', nullable=False, doc='电影介绍')
-    playingTime = db.Column(db.Date, default=date.today(), nullable=False, doc='上映时间')
-    duration = db.Column(db.SmallInteger, nullable=False, doc='电影时长(分钟)')
-    movieType = db.Column(db.String(30), nullable=False, doc='电影类型')
-    playingType = db.Column(db.String(30), doc='放映类型')
-    rating = db.Column(db.DECIMAL, default=0, doc='电影评分')
-    ratingNum = db.Column(db.SmallInteger, default=0, doc='评分人数')
+    name = db.Column(db.String(25), doc='电影名称', nullable=False)
+    description = db.Column(db.Text, doc='电影介绍', default='暂无介绍', nullable=False)
+    playingTime = db.Column(db.Date, doc='上映时间', default=date.today(), nullable=False)
+    duration = db.Column(db.SmallInteger, doc='电影时长(分钟)', nullable=False)
+    movieType = db.Column(db.String(30), doc='电影类型', nullable=False)
+    playingType = db.Column(db.String(30), doc='放映类型', nullable=False)
+    rating = db.Column(db.Float, doc='电影评分', default=0)
+    ratingNum = db.Column(db.SmallInteger, doc='评分人数', default=0)
+    poster = db.Column(db.String(40), doc='海报路径')
 
     recommends = db.relationship('Recommend', backref='movies', lazy='dynamic')
     screens = db.relationship('Screen', backref='movies', lazy='dynamic')

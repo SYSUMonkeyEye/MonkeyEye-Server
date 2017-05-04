@@ -7,7 +7,6 @@ from flask_login import login_user, login_required
 
 api = Namespace('user', description='用户模块')
 
-
 @api.route('/')
 class UsersResource(Resource):
     @api.doc(parser=api.parser()
