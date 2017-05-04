@@ -2,15 +2,14 @@
 import sys
 import random
 import top.api
-from app.utils import isValid
 from datetime import datetime
-from app.utils import mobile_code
 from flask import request, current_app
+from ..utils import isValid, mobile_code
 from flask_restplus import Resource, Namespace
 
 reload(sys)
 sys.setdefaultencoding('utf-8')  # 解决短信解码问题
-api = Namespace('smscode', description='短信验证码模块')
+api = Namespace('smscode', description='验证码模块')
 
 
 @api.route('/')

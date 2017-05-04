@@ -1,6 +1,6 @@
 # *-* coding: utf-8 *-*
 from app.utils import *
-from app.models import *
+from app.models import db, User
 from flask import request, current_app
 from flask_restplus import Namespace, Resource
 from flask_login import login_user, login_required
@@ -38,8 +38,7 @@ class UsersResource(Resource):
 
     def get(self):
         """获取用户列表"""
-        result = [user.__json__() for user in
-                  User.query.filter_by(isAdmin=False).all()]
+        result = [user.__json__() for user in User.query.filter_by(isAdmin=False).all()]
         return result, 200
 
 

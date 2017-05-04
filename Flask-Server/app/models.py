@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 from uuid import uuid4
 from flask_login import UserMixin
 from datetime import datetime, date
@@ -23,6 +24,9 @@ class User(UserMixin, db.Model):
     coupons = db.relationship('Coupon', backref='users', lazy='dynamic')
     favorites = db.relationship('Favorite', backref='users', lazy='dynamic')
     comments = db.relationship('Comment', backref='users', lazy='dynamic')
+
+    def __repr__(self):
+        return '%s <%s>' % (self.nickname, self.id)
 
     def __json__(self):
         return {
@@ -55,6 +59,21 @@ class Movie(db.Model):
     comments = db.relationship('Comment', backref='movies', lazy='dynamic')
     favorites = db.relationship('Favorite', backref='movies', lazy='dynamic')
 
+    def __repr__(self):
+        return self.name
+
+    def __json__(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'poster': 'static/images/poster/%s' % self.poster,
+            'movieType': self.movieType,
+            'playingType': self.playingType,
+            'playingTime': time.mktime(self.playingTime.timetuple()) * 1000,
+            'duration': self.duration,
+            'rating': self.rating,
+            'description': self.description
+        }
 
 class Recommend(db.Model):
     """推荐"""
@@ -62,7 +81,7 @@ class Recommend(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    type = db.Column(db.Boolean, nullable=False, doc='正在热映|即将上映')
+    type = db.Column(db.Boolean, nullable=False, doc='即将上映/正在热映')
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
 
 

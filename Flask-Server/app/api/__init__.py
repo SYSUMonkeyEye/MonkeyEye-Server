@@ -1,9 +1,10 @@
 # *-* coding: utf-8 *-*
 from flask_restplus import Api
 from user import api as ns1
-from session import api as ns2
-from smscode import api as ns3
-from password import api as ns4
+from movie import api as ns2
+from session import api as ns3
+from smscode import api as ns4
+from password import api as ns5
 
 api = Api(
     title='MonkeyEye',
@@ -15,6 +16,7 @@ api = Api(
 )
 
 api.add_namespace(ns1, path='/api/users')
-api.add_namespace(ns2, path='/api/session')
-api.add_namespace(ns3, path='/api/smscode')
-api.add_namespace(ns4, path='/api/password')
+api.add_namespace(ns2, path='/api/movies')
+api.add_namespace(ns3, path='/api/session')
+api.add_namespace(ns4, path='/api/smscode')
+api.add_namespace(ns5, path='/api/password')

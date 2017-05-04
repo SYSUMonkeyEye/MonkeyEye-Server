@@ -3,7 +3,7 @@ from models import *
 from hashlib import md5
 import flask_login as login
 from flask import current_app
-from utils import MD5Twice, isAdmin, isValid
+from utils import MD5Twice, isAdmin
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import expose, AdminIndexView, helpers
@@ -12,20 +12,21 @@ from wtforms import form, fields, validators, ValidationError
 
 class LoginForm(form.Form):
     """登录表单"""
-    username = fields.StringField(validators=[validators.required()])
-    password = fields.PasswordField(validators=[validators.required()])
+    username = fields.StringField(validators=[validators.data_required()])
+    password = fields.PasswordField(validators=[validators.data_required()])
 
     def validate_username(self, field):
         """登录校验"""
         user = self.get_user()
 
         if user is None:
-            raise validators.ValidationError('Invalid user')
+            raise ValidationError('Invalid user')
         if md5(self.password.data).hexdigest() != user.password:
-            raise validators.ValidationError('Invalid password')
+            raise ValidationError('Invalid password')
 
     def get_user(self):
-        return db.session.query(User).filter_by(id=self.username.data, isAdmin=1).first()
+        return User.query.filter_by(id=self.username.data, isAdmin=1).first()
+
 
 class MyModelView(ModelView):
     column_display_pk = True  # 显示主键
@@ -60,7 +61,7 @@ class UserModelView(MyModelView):
 class MovieModelView(MyModelView):
     # 可插入和编辑字段
     form_columns = ('name', 'poster', 'description', 'playingTime', 'duration', 'movieType', 'playingType')
-    form_overrides = dict(poster=fields.FileField)
+    form_overrides = {'poster': fields.FileField}
 
     def on_model_change(self, form, movie, is_created=False):
         poster = form.poster.data
@@ -80,7 +81,8 @@ class MovieModelView(MyModelView):
 
 
 class RecommendModelView(MyModelView):
-    column_list = form_columns = ('id', 'movieId', 'type')
+    column_list  = ('id', 'movieId', 'type')
+    form_columns = ('movies', 'type')
 
 
 class ScreenModelView(MyModelView):
@@ -89,7 +91,6 @@ class ScreenModelView(MyModelView):
 
 class OrderModelView(MyModelView):
     form_columns = column_list = ('id', 'movieId', 'screenId', 'seat', 'username', 'createTime', 'type')
-
 
 class CouponModelView(MyModelView):
     form_columns = column_list = ('id', 'discount', 'conditions', 'username', 'createTime', 'orderId')

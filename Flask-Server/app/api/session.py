@@ -1,7 +1,7 @@
 # *-* coding: utf-8 *-*
 from flask import request
-from app.models import User
-from app.utils import isValid, md5
+from ..models import User
+from ..utils import isValid, md5
 from flask_restplus import Namespace, Resource
 from flask_login import login_user, logout_user, login_required, current_user
 
