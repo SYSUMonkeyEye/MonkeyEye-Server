@@ -32,7 +32,7 @@ class User(UserMixin, db.Model):
         return {
             'id': self.id,
             'nickname': self.nickname,
-            'avatar': 'static/images/user/%s' % self.avatar,
+            'avatar': '/static/images/user/%s' % self.avatar,
             'description': self.description
         }
 
@@ -66,7 +66,7 @@ class Movie(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'poster': 'static/images/poster/%s' % self.poster,
+            'poster': '/static/images/poster/%s' % self.poster,
             'movieType': self.movieType,
             'playingType': self.playingType,
             'playingTime': time.mktime(self.playingTime.timetuple()) * 1000,
