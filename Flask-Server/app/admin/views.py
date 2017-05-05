@@ -42,7 +42,7 @@ class UserModelView(MyModelView):
     form_overrides = {'avatar': fields.FileField}
     form_args = {'id': dict(validators=[validators.Regexp('\d{11}', message='Invalid mobile')])}
 
-    def on_model_change(self, form, user, is_created=False):
+    def on_model_change(self, form, user, is_created):
         avatar = form.avatar.data
         if avatar.content_type.startswith('image/'):
             filename = avatar.filename
@@ -63,7 +63,7 @@ class MovieModelView(MyModelView):
     form_columns = ('expired', 'name', 'poster', 'description', 'playingTime', 'duration', 'movieType', 'playingType')
     form_create_rules = form_columns[1:]
 
-    def on_model_change(self, form, movie, is_created=False):
+    def on_model_change(self, form, movie, is_created):
         poster = form.poster.data
         movie.id = uuid4().hex if is_created else movie.id
         if poster.content_type.startswith('image/'):
@@ -81,7 +81,19 @@ class MovieModelView(MyModelView):
 
 
 class ScreenModelView(MyModelView):
-    form_columns = column_list = ('id', 'movieId', 'price', 'ticketNum', 'time')
+    column_list = ('id', 'movies', 'time', 'price', 'ticketNum')
+    form_columns = column_list[1:]
+
+    def on_model_change(self, form, screen, is_created):
+        time = form.time.data
+        movieId = form.movies.raw_data[0]
+        if time < datetime.now():
+            raise ValidationError("time has passed")
+        movie = Movie.query.get(movieId)
+        if movie is None:
+            raise ValidationError("movie does not exist")
+        if movie.expired:
+            raise ValidationError("movie is expired")
 
 
 class OrderModelView(MyModelView):

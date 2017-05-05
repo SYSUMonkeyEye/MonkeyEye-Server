@@ -60,7 +60,7 @@ class Movie(db.Model):
     favorites = db.relationship('Favorite', backref='movies', lazy='dynamic')
 
     def __repr__(self):
-        return self.name
+        return '%s <%s>' % (self.name, self.id)
 
     def __json__(self):
         return {
@@ -75,6 +75,7 @@ class Movie(db.Model):
             'description': self.description
         }
 
+
 class Screen(db.Model):
     """场次"""
     __tablename__ = 'screens'
@@ -82,11 +83,20 @@ class Screen(db.Model):
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
-    price = db.Column(db.DECIMAL, nullable=False, default=30, doc='票价')
-    ticketNum = db.Column(db.SmallInteger, nullable=False, doc='电影总票数')
-    time = db.Column(db.DateTime, nullable=False, default=datetime.now())
+    time = db.Column(db.DateTime, doc='场次时间', default=datetime.now(), nullable=False)
+    price = db.Column(db.Float, doc='票价', default=30, nullable=False)
+    ticketNum = db.Column(db.SmallInteger, doc='电影总票数', default=120, nullable=False)
 
     orders = db.relationship('Order', backref='screens', lazy='dynamic')
+
+    def __json__(self):
+        return {
+            'id': self.id,
+            'movieId': self.movieId,
+            'time': time.mktime(self.time.timetuple()) * 1000,
+            'price': self.price,
+            'ticketNum': self.ticketNum
+        }
 
 
 class Order(db.Model):
