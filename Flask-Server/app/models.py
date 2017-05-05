@@ -84,6 +84,7 @@ class Screen(db.Model):
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
     time = db.Column(db.DateTime, doc='场次时间', default=datetime.now(), nullable=False)
+    hallNum = db.Column(db.String(1), doc='放映厅(1-5)', nullable=False)
     price = db.Column(db.Float, doc='票价', default=30, nullable=False)
     ticketNum = db.Column(db.SmallInteger, doc='电影总票数', default=120, nullable=False)
 
@@ -95,7 +96,8 @@ class Screen(db.Model):
             'movieId': self.movieId,
             'time': time.mktime(self.time.timetuple()) * 1000,
             'price': self.price,
-            'ticketNum': self.ticketNum
+            'ticketNum': self.ticketNum,
+            'hallNum': self.hallNum
         }
 
 
@@ -145,3 +147,4 @@ class Comment(db.Model):
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
     content = db.Column(db.Text, nullable=False, doc='评论内容')
     rating = db.Column(db.SmallInteger, nullable=False, doc='电影评分')
+    db.DDL

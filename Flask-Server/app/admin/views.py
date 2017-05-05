@@ -3,6 +3,7 @@ from ..models import *
 from hashlib import md5
 import flask_login as login
 from flask import current_app
+from datetime import timedelta
 from ..utils import MD5Twice, isAdmin
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
@@ -46,7 +47,7 @@ class UserModelView(MyModelView):
         avatar = form.avatar.data
         if avatar.content_type.startswith('image/'):
             filename = avatar.filename
-            filename = "%s%s" % (user.id, filename[filename.rindex('.'):])
+            filename = '%s%s' % (user.id, filename[filename.rindex('.'):])
             avatar.save('%s/images/user/%s' % (current_app.static_folder, filename))
             user.avatar = filename
         elif is_created:
@@ -68,11 +69,11 @@ class MovieModelView(MyModelView):
         movie.id = uuid4().hex if is_created else movie.id
         if poster.content_type.startswith('image/'):
             filename = poster.filename
-            filename = "%s%s" % (movie.id, filename[filename.rindex('.'):])
+            filename = '%s%s' % (movie.id, filename[filename.rindex('.'):])
             poster.save('%s/images/poster/%s' % (current_app.static_folder, filename))
             movie.poster = filename
         elif is_created:
-            raise ValidationError("poster required")
+            raise ValidationError('poster required')
         else:
             movie.poster = form.poster.object_data
 
@@ -81,19 +82,40 @@ class MovieModelView(MyModelView):
 
 
 class ScreenModelView(MyModelView):
-    column_list = ('id', 'movies', 'time', 'price', 'ticketNum')
+    column_list = ('id', 'movies', 'hallNum', 'time', 'price', 'ticketNum')
     form_columns = column_list[1:]
+    form_args = {'hallNum': dict(validators=[validators.Regexp('[1-5]', message='hall number is between 1 and 5')])}
 
     def on_model_change(self, form, screen, is_created):
         time = form.time.data
         movieId = form.movies.raw_data[0]
         if time < datetime.now():
-            raise ValidationError("time has passed")
+            raise ValidationError('time has passed')
         movie = Movie.query.get(movieId)
         if movie is None:
-            raise ValidationError("movie does not exist")
+            raise ValidationError('movie does not exist')
         if movie.expired:
-            raise ValidationError("movie is expired")
+            raise ValidationError('movie is expired')
+
+        # 从昨天开始在同个放映厅的场次
+        # 判断同个时间段是否有电影在上映
+        today = datetime.today()
+        oneday = timedelta(days=1)
+        yesterday = today - oneday
+        screens = Screen.query.filter_by(hallNum=form.hallNum.data).filter(Screen.time > yesterday).all()
+        endtime = time + timedelta(minutes=movie.duration)
+
+        for s in screens:
+            if s is screen:
+                continue
+
+            # 合法的场次要求
+            # 开始时间比其他场次结束时间晚 或者 结束时间比其他场次开始时间早
+            m = Movie.query.get(s.movieId)
+            if time > (s.time + timedelta(minutes=m.duration)) or endtime < s.time:
+                continue
+
+            raise ValidationError('%r is playing in the same hall at this time' % movie)
 
 
 class OrderModelView(MyModelView):
