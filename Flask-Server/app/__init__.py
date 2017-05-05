@@ -1,11 +1,11 @@
 # *-* coding: utf-8 *-*
 from api import api
 from models import *
-from flask import Flask, redirect
+from flask import Flask
 from config import config
 from functools import wraps
 from utils import MD5Twice, isAdmin
-from admin import admin, init_login, login
+from admin.admin import admin, init_login, login
 
 def swagger_login(func):
     @wraps(func)

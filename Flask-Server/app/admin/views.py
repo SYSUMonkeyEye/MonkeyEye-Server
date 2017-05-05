@@ -1,9 +1,9 @@
 # *-* coding: utf-8 *-*
-from models import *
+from ..models import *
 from hashlib import md5
 import flask_login as login
 from flask import current_app
-from utils import MD5Twice, isAdmin
+from ..utils import MD5Twice, isAdmin
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import expose, AdminIndexView, helpers
@@ -59,9 +59,9 @@ class UserModelView(MyModelView):
 
 
 class MovieModelView(MyModelView):
-    # 可插入和编辑字段
-    form_columns = ('name', 'poster', 'description', 'playingTime', 'duration', 'movieType', 'playingType')
     form_overrides = {'poster': fields.FileField}
+    form_columns = ('expired', 'name', 'poster', 'description', 'playingTime', 'duration', 'movieType', 'playingType')
+    form_create_rules = form_columns[1:]
 
     def on_model_change(self, form, movie, is_created=False):
         poster = form.poster.data
@@ -78,11 +78,6 @@ class MovieModelView(MyModelView):
 
         if form.description.data.strip() == '':
             movie.description = '暂无介绍'
-
-
-class RecommendModelView(MyModelView):
-    column_list  = ('id', 'movieId', 'type')
-    form_columns = ('movies', 'type')
 
 
 class ScreenModelView(MyModelView):

@@ -8,7 +8,7 @@ api = Namespace('movie', description='电影模块')
 class MoviesResource(Resource):
     def get(self):
         """获取电影列表"""
-        result = [movie.__json__() for movie in Movie.query.all()]
+        result = [movie.__json__() for movie in Movie.query.filter_by(expired=False).all()]
         return result, 200
 
 

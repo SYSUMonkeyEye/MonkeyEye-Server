@@ -43,6 +43,7 @@ class Movie(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    expired = db.Column(db.Boolean, doc='是否下架', default=False, nullable=False)
     name = db.Column(db.String(25), doc='电影名称', nullable=False)
     description = db.Column(db.Text, doc='电影介绍', default='暂无介绍', nullable=False)
     playingTime = db.Column(db.Date, doc='上映时间', default=date.today(), nullable=False)
@@ -53,7 +54,6 @@ class Movie(db.Model):
     ratingNum = db.Column(db.SmallInteger, doc='评分人数', default=0)
     poster = db.Column(db.String(40), doc='海报路径')
 
-    recommends = db.relationship('Recommend', backref='movies', lazy='dynamic')
     screens = db.relationship('Screen', backref='movies', lazy='dynamic')
     orders = db.relationship('Order', backref='movies', lazy='dynamic')
     comments = db.relationship('Comment', backref='movies', lazy='dynamic')
@@ -74,16 +74,6 @@ class Movie(db.Model):
             'rating': self.rating,
             'description': self.description
         }
-
-class Recommend(db.Model):
-    """推荐"""
-    __tablename__ = 'recommends'
-    __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
-
-    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    type = db.Column(db.Boolean, nullable=False, doc='即将上映/正在热映')
-    movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
-
 
 class Screen(db.Model):
     """场次"""
