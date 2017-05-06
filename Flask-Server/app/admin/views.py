@@ -80,6 +80,11 @@ class MovieModelView(MyModelView):
         if form.description.data.strip() == '':
             movie.description = '暂无介绍'
 
+    def after_model_change(self, form, movie, is_created):
+        if movie.expired:
+            db.session.delete(Recommend.query.get(movie.id))
+            db.session.commit()
+
 
 class ScreenModelView(MyModelView):
     column_list = ('id', 'movies', 'hallNum', 'time', 'price', 'ticketNum')
@@ -114,6 +119,12 @@ class ScreenModelView(MyModelView):
                 continue
 
             raise ValidationError('%r is playing in the same hall at this time' % movie)
+
+
+class RecommendModelView(MyModelView):
+    def on_model_change(self, form, recommend, is_created):
+        if Movie.query.get(form.movies.raw_data[0]).expired:
+            raise ValidationError('This movie is expired')
 
 
 class OrderModelView(MyModelView):

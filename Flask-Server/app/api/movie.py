@@ -1,6 +1,6 @@
 # *-* coding: utf-8 *-*
 from flask import request
-from app.models import Movie
+from app.models import Movie, Recommend
 from flask_restplus import Namespace, Resource
 
 api = Namespace('movie', description='电影模块')
@@ -30,3 +30,11 @@ class MovieResource(Resource):
         if movie is None:
             return {'message': 'Movie does not exist'}, 400
         return movie.__json__(), 200
+
+
+@api.route('/recommendation')
+class RecommendResource(Resource):
+    def get(self):
+        """获取电影推荐"""
+        result = [recommend.__json__() for recommend in Recommend.query.all()]
+        return result, 200

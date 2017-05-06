@@ -55,6 +55,7 @@ class Movie(db.Model):
     poster = db.Column(db.String(40), doc='海报路径')
 
     screens = db.relationship('Screen', backref='movies', lazy='dynamic')
+    recommends = db.relationship('Recommend', backref='movies', lazy='dynamic')
     orders = db.relationship('Order', backref='movies', lazy='dynamic')
     comments = db.relationship('Comment', backref='movies', lazy='dynamic')
     favorites = db.relationship('Favorite', backref='movies', lazy='dynamic')
@@ -99,6 +100,23 @@ class Screen(db.Model):
             'ticketNum': self.ticketNum,
             'hallNum': self.hallNum,
             'playingType': Movie.query.get(self.movieId).playingType
+        }
+
+
+class Recommend(db.Model):
+    """推荐"""
+    __tablename__ = 'recommends'
+    __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
+
+    movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), primary_key=True, nullable=False)
+
+
+    def __json__(self):
+        movie = Movie.query.get(self.movieId)
+        return {
+            'movieId': self.movieId,
+            'poster': '/static/images/poster/%s' % movie.poster,
+            'playingTime': time.mktime(movie.playingTime.timetuple()) * 1000
         }
 
 
