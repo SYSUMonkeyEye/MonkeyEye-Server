@@ -1,8 +1,8 @@
 # *-* coding: utf-8 *-*
 from api import api
-from models import *
 from flask import Flask
 from config import config
+from models import db, User
 from functools import wraps
 from utils import MD5Twice, isAdmin
 from admin.admin import admin, init_login, login
@@ -28,7 +28,7 @@ def create_app(config_name):
     db.init_app(app)
     db.create_all()
 
-    if User.query.filter_by(id=app.config['ADMIN'][0]).first() is None:
+    if User.query.get(app.config['ADMIN'][0]) is None:
         user = User()
         user.id = app.config['ADMIN'][0]
         user.password = MD5Twice(app.config['ADMIN'][1])

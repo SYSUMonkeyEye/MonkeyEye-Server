@@ -99,9 +99,7 @@ class ScreenModelView(MyModelView):
 
         # 从昨天开始在同个放映厅的场次
         # 判断同个时间段是否有电影在上映
-        today = datetime.today()
-        oneday = timedelta(days=1)
-        yesterday = today - oneday
+        yesterday = datetime.today() - timedelta(days=1)
         screens = Screen.query.filter_by(hallNum=form.hallNum.data).filter(Screen.time > yesterday).all()
         endtime = time + timedelta(minutes=movie.duration)
 
@@ -120,6 +118,7 @@ class ScreenModelView(MyModelView):
 
 class OrderModelView(MyModelView):
     form_columns = column_list = ('id', 'movieId', 'screenId', 'seat', 'username', 'createTime', 'type')
+
 
 class CouponModelView(MyModelView):
     form_columns = column_list = ('id', 'discount', 'conditions', 'username', 'createTime', 'orderId')

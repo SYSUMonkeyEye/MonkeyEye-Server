@@ -48,8 +48,8 @@ class Movie(db.Model):
     description = db.Column(db.Text, doc='电影介绍', default='暂无介绍', nullable=False)
     playingTime = db.Column(db.Date, doc='上映时间', default=date.today(), nullable=False)
     duration = db.Column(db.SmallInteger, doc='电影时长(分钟)', nullable=False)
-    movieType = db.Column(db.String(30), doc='电影类型', nullable=False)
-    playingType = db.Column(db.String(30), doc='放映类型', nullable=False)
+    movieType = db.Column(db.String(20), doc='电影类型', nullable=False)
+    playingType = db.Column(db.String(15), doc='放映类型', nullable=False)
     rating = db.Column(db.Float, doc='电影评分', default=0)
     ratingNum = db.Column(db.SmallInteger, doc='评分人数', default=0)
     poster = db.Column(db.String(40), doc='海报路径')
@@ -97,7 +97,8 @@ class Screen(db.Model):
             'time': time.mktime(self.time.timetuple()) * 1000,
             'price': self.price,
             'ticketNum': self.ticketNum,
-            'hallNum': self.hallNum
+            'hallNum': self.hallNum,
+            'playingType': Movie.query.get(self.movieId).playingType
         }
 
 
@@ -127,6 +128,7 @@ class Coupon(db.Model):
     createTime = db.Column(db.DateTime, nullable=False, default=datetime.now(), doc='创建时间')
     orderId = db.Column(db.String(32), db.ForeignKey('orders.id', ondelete='CASCADE'), nullable=False)
 
+
 class Favorite(db.Model):
     """收藏"""
     __tablename__ = 'favorites'
@@ -147,4 +149,3 @@ class Comment(db.Model):
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
     content = db.Column(db.Text, nullable=False, doc='评论内容')
     rating = db.Column(db.SmallInteger, nullable=False, doc='电影评分')
-    db.DDL
