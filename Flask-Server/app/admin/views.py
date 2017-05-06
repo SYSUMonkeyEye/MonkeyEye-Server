@@ -1,4 +1,5 @@
 # *-* coding: utf-8 *-*
+import os
 from ..models import *
 from hashlib import md5
 import flask_login as login
@@ -58,6 +59,9 @@ class UserModelView(MyModelView):
         if is_created:  # 新建用户时密码进行两次md5
             user.password = MD5Twice(form.password.data)
 
+    def after_model_delete(self, user):
+        os.remove('%s/images/user/%s' % (current_app.static_folder, user.avatar))
+
 
 class MovieModelView(MyModelView):
     form_overrides = {'poster': fields.FileField}
@@ -82,8 +86,13 @@ class MovieModelView(MyModelView):
 
     def after_model_change(self, form, movie, is_created):
         if movie.expired:
-            db.session.delete(Recommend.query.get(movie.id))
-            db.session.commit()
+            recommend = Recommend.query.get(movie.id)
+            if recommend is not None:
+                db.session.delete(recommend)
+                db.session.commit()
+
+    def after_model_delete(self, movie):
+        os.remove('%s/images/poster/%s' % (current_app.static_folder, movie.poster))
 
 
 class ScreenModelView(MyModelView):
@@ -140,7 +149,8 @@ class FavoriteModelView(MyModelView):
 
 
 class CommentModelView(MyModelView):
-    column_list = form_columns = ('id', 'movieId', 'username', 'content', 'rating')
+    column_list = ('id', 'movies', 'users', 'content', 'rating')
+    form_columns = column_list[1:]
 
 
 class MyAdminIndexView(AdminIndexView):

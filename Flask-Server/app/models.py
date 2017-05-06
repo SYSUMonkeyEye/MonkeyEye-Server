@@ -20,10 +20,10 @@ class User(UserMixin, db.Model):
     description = db.Column(db.String(50), doc='个性签名', default='这个人很懒，什么也没留下', nullable=False)
     isAdmin = db.Column(db.Boolean, doc='是否管理员', default=False)
 
-    orders = db.relationship('Order', backref='users', lazy='dynamic')
-    coupons = db.relationship('Coupon', backref='users', lazy='dynamic')
-    favorites = db.relationship('Favorite', backref='users', lazy='dynamic')
-    comments = db.relationship('Comment', backref='users', lazy='dynamic')
+    orders = db.relationship('Order', backref='users', cascade='all', lazy='dynamic')
+    coupons = db.relationship('Coupon', backref='users', cascade='all', lazy='dynamic')
+    favorites = db.relationship('Favorite', backref='users', cascade='all', lazy='dynamic')
+    comments = db.relationship('Comment', backref='users', cascade='all', lazy='dynamic')
 
     def __repr__(self):
         return '%s <%s>' % (self.nickname, self.id)
@@ -54,11 +54,11 @@ class Movie(db.Model):
     ratingNum = db.Column(db.SmallInteger, doc='评分人数', default=0)
     poster = db.Column(db.String(40), doc='海报路径')
 
-    screens = db.relationship('Screen', backref='movies', lazy='dynamic')
-    recommends = db.relationship('Recommend', backref='movies', lazy='dynamic')
-    orders = db.relationship('Order', backref='movies', lazy='dynamic')
-    comments = db.relationship('Comment', backref='movies', lazy='dynamic')
-    favorites = db.relationship('Favorite', backref='movies', lazy='dynamic')
+    screens = db.relationship('Screen', backref='movies', cascade='all', lazy='dynamic')
+    recommends = db.relationship('Recommend', backref='movies', cascade='all', lazy='dynamic')
+    orders = db.relationship('Order', backref='movies', cascade='all', lazy='dynamic')
+    comments = db.relationship('Comment', backref='movies', cascade='all', lazy='dynamic')
+    favorites = db.relationship('Favorite', backref='movies', cascade='all', lazy='dynamic')
 
     def __repr__(self):
         return '%s <%s>' % (self.name, self.id)
@@ -83,13 +83,13 @@ class Screen(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
+    movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     time = db.Column(db.DateTime, doc='场次时间', default=datetime.now(), nullable=False)
     hallNum = db.Column(db.String(1), doc='放映厅(1-5)', nullable=False)
     price = db.Column(db.Float, doc='票价', default=30, nullable=False)
     ticketNum = db.Column(db.SmallInteger, doc='电影总票数', default=120, nullable=False)
 
-    orders = db.relationship('Order', backref='screens', lazy='dynamic')
+    orders = db.relationship('Order', backref='screens', cascade='all', lazy='dynamic')
 
     def __json__(self):
         return {
@@ -108,8 +108,7 @@ class Recommend(db.Model):
     __tablename__ = 'recommends'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), primary_key=True, nullable=False)
-
+    movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), primary_key=True, nullable=False)
 
     def __json__(self):
         movie = Movie.query.get(self.movieId)
@@ -126,10 +125,10 @@ class Order(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
-    screenId = db.Column(db.String(32), db.ForeignKey('screens.id', ondelete='CASCADE'), nullable=False)
+    movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
+    screenId = db.Column(db.String(32), db.ForeignKey('screens.id'), nullable=False)
     seat = db.Column(db.SmallInteger, nullable=False, doc='座位号')
-    username = db.Column(db.String(32), db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
     createTime = db.Column(db.DateTime, default=datetime.now(), nullable=False, doc='创建时间')
     type = db.Column(db.String(1), default='0', nullable=False, doc='订单类型')
 
@@ -142,9 +141,9 @@ class Coupon(db.Model):
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
     discount = db.Column(db.DECIMAL, nullable=False, default=0.8, doc='折扣')
     conditions = db.Column(db.DECIMAL, nullable=False, doc='满多少元可用')
-    username = db.Column(db.String(32), db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, doc='手机号码')
+    username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
     createTime = db.Column(db.DateTime, nullable=False, default=datetime.now(), doc='创建时间')
-    orderId = db.Column(db.String(32), db.ForeignKey('orders.id', ondelete='CASCADE'), nullable=False)
+    orderId = db.Column(db.String(32), db.ForeignKey('orders.id'), nullable=False)
 
 
 class Favorite(db.Model):
@@ -153,8 +152,8 @@ class Favorite(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    username = db.Column(db.String(32), db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, doc='手机号码')
-    movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
+    username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
+    movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
 
 
 class Comment(db.Model):
@@ -163,7 +162,7 @@ class Comment(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    username = db.Column(db.String(32), db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, doc='手机号码')
-    movieId = db.Column(db.String(32), db.ForeignKey('movies.id', ondelete='CASCADE'), nullable=False)
+    username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
+    movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     content = db.Column(db.Text, nullable=False, doc='评论内容')
     rating = db.Column(db.SmallInteger, nullable=False, doc='电影评分')
