@@ -15,9 +15,11 @@ class User(UserMixin, db.Model):
 
     id = db.Column(db.String(11), doc='手机号码', primary_key=True)
     password = db.Column(db.String(32), doc='密码', nullable=False)
+    payPassword = db.Column(db.String(32), doc='支付密码', nullable=False)
     nickname = db.Column(db.String(20), doc='昵称', default='猿眼用户', nullable=False)
-    avatar = db.Column(db.String(20), doc='头像路径', default='MonkeyEye.jpg')
+    money = db.Column(db.Float, doc='账户余额', default=50, nullable=False)
     description = db.Column(db.String(50), doc='个性签名', default='这个人很懒，什么也没留下', nullable=False)
+    avatar = db.Column(db.String(20), doc='头像路径', default='MonkeyEye.jpg')
     isAdmin = db.Column(db.Boolean, doc='是否管理员', default=False)
 
     orders = db.relationship('Order', backref='users', cascade='all', lazy='dynamic')
@@ -127,7 +129,7 @@ class Order(db.Model):
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     screenId = db.Column(db.String(32), db.ForeignKey('screens.id'), nullable=False)
-    seat = db.Column(db.SmallInteger, nullable=False, doc='座位号')
+    seat = db.Column(db.String(15), nullable=False, doc='座位号')
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
     createTime = db.Column(db.DateTime, default=datetime.now(), nullable=False, doc='创建时间')
     type = db.Column(db.String(1), default='0', nullable=False, doc='订单类型')

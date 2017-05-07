@@ -6,6 +6,9 @@ from flask_login import current_user
 
 mobile_code = {}
 isValid = lambda x, y: len(x) == y and x.isdigit()
+checkPassword = lambda s: s is not None and s.isalnum() and len(s)
+MD5 = lambda s: md5(s).hexdigest()
+MD5Twice = lambda s: MD5(MD5(s))
 
 def isAdmin():
     try:
@@ -13,10 +16,6 @@ def isAdmin():
             return True
     except AttributeError as e:
         return False
-
-# 两次md5
-def MD5Twice(password):
-    return md5(md5(password).hexdigest()).hexdigest()
 
 # 检查短信验证码, 10分钟内有效
 def checkMobileAndCode(mobile, code):

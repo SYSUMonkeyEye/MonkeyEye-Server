@@ -1,7 +1,7 @@
 # *-* coding: utf-8 *-*
 from flask import request
 from ..models import User
-from ..utils import isValid, md5
+from ..utils import isValid, MD5
 from flask_restplus import Namespace, Resource
 from flask_login import login_user, logout_user, login_required, current_user
 
@@ -17,7 +17,6 @@ class Session(Resource):
         """用户登入"""
         form = request.form
         mobile = form.get('id', '')
-        hash = form.get('password', '')
 
         if not isValid(mobile, 11):
             return {'message':'Invalid user name'}, 400
@@ -26,7 +25,8 @@ class Session(Resource):
         if user is None:
             return {'message':'User does not exist'}, 400
 
-        if user.password != md5(hash).hexdigest():
+        password = form.get('password', None)
+        if user.password != MD5(password):
             return {'message':'Wrong password'}, 400
 
         login_user(user)

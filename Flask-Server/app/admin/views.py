@@ -1,11 +1,10 @@
 # *-* coding: utf-8 *-*
 import os
 from ..models import *
-from hashlib import md5
 import flask_login as login
 from flask import current_app
 from datetime import timedelta
-from ..utils import MD5Twice, isAdmin
+from ..utils import MD5, MD5Twice, isAdmin
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import expose, AdminIndexView, helpers
@@ -23,7 +22,7 @@ class LoginForm(form.Form):
 
         if user is None:
             raise ValidationError('Invalid user')
-        if md5(self.password.data).hexdigest() != user.password:
+        if MD5(self.password.data) != user.password:
             raise ValidationError('Invalid password')
 
     def get_user(self):
@@ -31,6 +30,7 @@ class LoginForm(form.Form):
 
 
 class MyModelView(ModelView):
+    page_size = 10            # 每页10条数据
     column_display_pk = True  # 显示主键
 
     def is_accessible(self):
@@ -38,9 +38,9 @@ class MyModelView(ModelView):
 
 
 class UserModelView(MyModelView):
-    column_exclude_list = ('password', 'isAdmin')  # 不显示密码
-    form_edit_rules = ('nickname', 'avatar', 'description')  # 可编辑的字段
-    form_columns = ('id', 'password', 'nickname', 'avatar', 'description')  # 可插入的字段
+    column_exclude_list = ('password', 'payPassword', 'isAdmin')  # 不显示密码
+    form_columns = ('id', 'password', 'payPassword', 'nickname', 'money', 'avatar', 'description')  # 可插入的字段
+    form_edit_rules = form_columns[3:]  # 可编辑的字段
     form_overrides = {'avatar': fields.FileField}
     form_args = {'id': dict(validators=[validators.Regexp('\d{11}', message='Invalid mobile')])}
 
@@ -64,9 +64,10 @@ class UserModelView(MyModelView):
 
 
 class MovieModelView(MyModelView):
-    form_overrides = {'poster': fields.FileField}
+    column_exclude_list = ('description')
     form_columns = ('expired', 'name', 'poster', 'description', 'playingTime', 'duration', 'movieType', 'playingType')
     form_create_rules = form_columns[1:]
+    form_overrides = {'poster': fields.FileField}
 
     def on_model_change(self, form, movie, is_created):
         poster = form.poster.data

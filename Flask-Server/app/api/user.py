@@ -12,12 +12,12 @@ class UsersResource(Resource):
     @api.doc(parser=api.parser()
              .add_argument('id', required=True, help='手机号码', location='form')
              .add_argument('password', required=True, help='密码的md5值', location='form')
+             .add_argument('payPassword', required=True, help='支付密码的md5值', location='form')
              .add_argument('smscode', required=True, help='短信验证码', location='form'))
     def post(self):
         """用户注册"""
         form = request.form
         mobile = form.get('id', '')
-        hash = form.get('password', '')
         smscode = form.get('smscode', '')
 
         # 校验手机和短信验证码
@@ -28,9 +28,18 @@ class UsersResource(Resource):
         if User.query.get(mobile) is not None:
             return {'message': 'User already exists'}, 400
 
+        password = form.get('password', None)
+        if not checkPassword(password):
+            return {'message': 'Invalid password'}, 400
+
+        payPassword = form.get('payPassword', None)
+        if not checkPassword(payPassword):
+            return {'message': 'Invalid payPassword'}, 400
+
         user = User()
         user.id = mobile
-        user.password = md5(hash).hexdigest()
+        user.password = MD5(password)
+        user.payPassword = MD5(payPassword)
         db.session.add(user)
         db.session.commit()
         login_user(user)
@@ -59,7 +68,6 @@ class UserResource(Resource):
              .add_argument('nickname', help='昵称', location='form')
              .add_argument('description', help='个性签名', location='form')
              .add_argument('avatar', help='头像', location='files'))
-
     @login_required
     def patch(self, id):
         """修改用户信息"""
