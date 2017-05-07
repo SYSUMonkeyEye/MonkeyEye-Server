@@ -30,10 +30,10 @@ class Password(Resource):
 
 @api.route('/payPassword')
 class PayPassword(Resource):
-    @api.doc(parser=api.parser().add_argument('new_payPassword', type=str, required=True, help='新支付密码密码md5值', location='form'))
+    @api.doc(parser=api.parser().add_argument('new_payPassword', type=str, required=True, help='新支付密码md5值', location='form'))
     @login_required
     def patch(self):
-        """修改密码"""
+        """修改支付密码"""
         form = request.form
         new_payPassword = form.get('new_payPassword', None)
         if not checkPassword(new_payPassword):
