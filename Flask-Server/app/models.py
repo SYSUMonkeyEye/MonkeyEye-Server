@@ -58,7 +58,7 @@ class Movie(db.Model):
 
     screens = db.relationship('Screen', backref='movies', cascade='all', lazy='dynamic')
     recommends = db.relationship('Recommend', backref='movies', cascade='all', lazy='dynamic')
-    orders = db.relationship('Order', backref='movies', cascade='all', lazy='dynamic')
+    # orders = db.relationship('Order', backref='movies', cascade='all', lazy='dynamic')
     comments = db.relationship('Comment', backref='movies', cascade='all', lazy='dynamic')
     favorites = db.relationship('Favorite', backref='movies', cascade='all', lazy='dynamic')
 
@@ -102,14 +102,15 @@ class Screen(db.Model):
         return '{name} [{time}] <{id}>'.format(**res)
 
     def __json__(self):
+        movie = Movie.query.get(self.movieId)
         return {
             'id': self.id,
-            'movieId': self.movieId,
+            'movie': movie.__json__(),
             'time': time.mktime(self.time.timetuple()) * 1000,
             'price': self.price,
             'ticketNum': self.ticketNum,
             'hallNum': self.hallNum,
-            'playingType': Movie.query.get(self.movieId).playingType
+            'playingType': movie.playingType
         }
 
 
@@ -135,12 +136,12 @@ class Order(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
+    # movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     screenId = db.Column(db.String(32), db.ForeignKey('screens.id'), nullable=False)
-    seat = db.Column(db.String(15), nullable=False, doc='座位号')
+    seat = db.Column(db.String(15), doc='座位号(逗号分隔)', nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
-    createTime = db.Column(db.DateTime, default=datetime.now(), nullable=False, doc='创建时间')
-    type = db.Column(db.String(1), default='0', nullable=False, doc='订单类型')
+    createTime = db.Column(db.DateTime, doc='创建时间', default=datetime.now(), nullable=False)
+    type = db.Column(db.String(1), doc='订单状态', default='0', nullable=False)
 
 
 class Coupon(db.Model):

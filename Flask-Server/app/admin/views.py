@@ -68,6 +68,9 @@ class MovieModelView(MyModelView):
     form_columns = ('expired', 'name', 'poster', 'description', 'playingTime', 'duration', 'movieType', 'playingType')
     form_create_rules = form_columns[1:]
     form_overrides = {'poster': fields.FileField}
+    form_args = {
+        'movieType': dict(render_kw={'placeholder': '电影类型, 中文逗号分隔'})
+    }
 
     def on_model_change(self, form, movie, is_created):
         poster = form.poster.data
@@ -90,7 +93,10 @@ class MovieModelView(MyModelView):
             recommend = Recommend.query.get(movie.id)
             if recommend is not None:
                 db.session.delete(recommend)
-                db.session.commit()
+            screens = Screen.query.filter_by(movieId=movie.id).all()
+            for s in screens:
+                db.session.delete(s)
+            db.session.commit()
 
     def after_model_delete(self, movie):
         os.remove('%s/images/poster/%s' % (current_app.static_folder, movie.poster))
@@ -100,7 +106,12 @@ class ScreenModelView(MyModelView):
     column_list = ('id', 'movies', 'hallNum', 'time', 'price', 'ticketNum')
     form_columns = column_list[1:]
     form_edit_rules = form_columns[1:]  # 可编辑的字段
-    form_args = {'hallNum': dict(validators=[validators.Regexp('[1-5]', message='hall number is between 1 and 5')])}
+    form_args = {
+        'hallNum': {
+            'validators': [validators.Regexp('[1-5]', message='hall number is between 1 and 5')],
+            'render_kw': {'placeholder': "放映厅, 1~5"}
+        }
+    }
 
     def on_model_change(self, form, screen, is_created):
         time = form.time.data
@@ -142,8 +153,30 @@ class RecommendModelView(MyModelView):
 
 
 class OrderModelView(MyModelView):
-    column_list = ('id', 'movies', 'screens', 'seat', 'users', 'createTime', 'type')
+    column_list = ('id', 'screens', 'seat', 'users', 'createTime', 'type')
     form_columns = column_list[2:]
+    form_edit_rules = column_list[-1]   # 只能修改订单状态
+    form_args = {
+        'seat': dict(render_kw={'placeholder': '座位号, 英文逗号分隔, 最多4个座位'}),
+        'type': dict(render_kw={'placeholder': '订单状态(0:未支付, 1:已支付, 2:已过期)'},
+                     validators=[validators.Regexp('[012]', message='Invalid order type')])
+    }
+
+    def on_model_change(self, form, order, is_created):
+        seat = form.seat.data
+
+        try:
+            seat = map(int, seat.split(','))
+        except Exception as e:
+            raise ValidationError('Invalid seat')
+
+        # order.movieId =
+
+        # screenId = form.screens.raw_data[0]
+        # seatOrdered
+        # print screenId
+        # raise ValidationError('Test')
+
 
 class CouponModelView(MyModelView):
     form_columns = column_list = ('id', 'discount', 'conditions', 'username', 'createTime', 'orderId')

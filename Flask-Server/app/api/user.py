@@ -9,6 +9,12 @@ api = Namespace('user', description='用户模块')
 
 @api.route('/')
 class UsersResource(Resource):
+
+    # def get(self):
+    #     """获取用户列表"""
+    #     result = [user.__json__() for user in User.query.filter_by(isAdmin=False).all()]
+    #     return result, 200
+
     @api.doc(parser=api.parser()
              .add_argument('id', required=True, help='手机号码', location='form')
              .add_argument('password', required=True, help='密码的md5值', location='form')
@@ -44,11 +50,6 @@ class UsersResource(Resource):
         db.session.commit()
         login_user(user)
         return {'message': 'Register successfully'}, 200
-
-    def get(self):
-        """获取用户列表"""
-        result = [user.__json__() for user in User.query.filter_by(isAdmin=False).all()]
-        return result, 200
 
 
 @api.route('/<id>')
