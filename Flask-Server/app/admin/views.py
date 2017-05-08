@@ -194,7 +194,7 @@ class OrderModelView(MyModelView):
             raise ValidationError('Invalid seat')
 
         if len(seat) > 4:
-            raise ValidationError('You can only buy up to 4 tickets')
+            raise ValidationError('You can only buy up to 4 tickets at a time')
 
         screenId = form.screens.raw_data[0]
         screen = Screen.query.filter_by(id=screenId).first()

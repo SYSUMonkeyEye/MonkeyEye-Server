@@ -39,13 +39,8 @@ class ScreenResource(Resource):
 class ScreenResource(Resource):
     def get(self, id):
         """获取场次已预定的座位号"""
-        # screen = Screen.query.get(id)
-        # if screen is None:
-        #     return {'message': 'Screen does not exist'}, 400
-        # screens = Order.query.filter_by(screenId=id).all()
-        # seats = []
-        # for s in screens:
-        #     seats.extend(s.seat.split(','))
-        #
-        # return seats, 200
-        return [10,13,25,40], 200
+        orders = Order.query.filter_by(screenId=id).all()
+        seat_ordered = []
+        for o in orders:
+            seat_ordered.extend(o.seat)
+        return seat_ordered, 200

@@ -136,10 +136,30 @@ class Order(db.Model):
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
     screenId = db.Column(db.String(32), db.ForeignKey('screens.id'), nullable=False)
-    # seat = db.Column(db.String(15), doc='座位号(逗号分隔)', nullable=False)
     seat = db.Column(db.PickleType, doc='座位号(逗号分隔)', nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
     createTime = db.Column(db.DateTime, doc='创建时间', default=datetime.now(), nullable=False)
+
+    def __repr__(self):
+        screen = Screen.query.get(self.screenId)
+        movie = Movie.query.get(screen.movieId)
+        res = {
+            'id': self.id,
+            'hallNum': screen.hallNum,
+            'seat': self.seat,
+            'name': movie.name,
+            'time': screen.time.strftime('%Y-%m-%d %X')
+        }
+        return '{name} {time}放映 {hallNum}号厅{seat}座 订单{id}'.format(**res)
+
+    def __json__(self):
+        return {
+            'id': self.id,
+            'screenId': self.screenId,
+            'createTime': time.mktime(self.createTime.timetuple()) * 1000,
+            'username': self.username,
+            'seat': self.seat
+        }
 
 
 class Coupon(db.Model):
