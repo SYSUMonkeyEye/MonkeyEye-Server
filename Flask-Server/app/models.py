@@ -93,6 +93,14 @@ class Screen(db.Model):
 
     orders = db.relationship('Order', backref='screens', cascade='all', lazy='dynamic')
 
+    def __repr__(self):
+        res = {
+            'id': self.id,
+            'name': Movie.query.get(self.movieId).name,
+            'time': self.time.strftime('%Y-%m-%d %X')
+        }
+        return '{name} [{time}] <{id}>'.format(**res)
+
     def __json__(self):
         return {
             'id': self.id,

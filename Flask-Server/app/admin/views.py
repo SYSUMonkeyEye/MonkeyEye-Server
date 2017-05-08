@@ -142,8 +142,8 @@ class RecommendModelView(MyModelView):
 
 
 class OrderModelView(MyModelView):
-    form_columns = column_list = ('id', 'movieId', 'screenId', 'seat', 'username', 'createTime', 'type')
-
+    column_list = ('id', 'movies', 'screens', 'seat', 'users', 'createTime', 'type')
+    form_columns = column_list[2:]
 
 class CouponModelView(MyModelView):
     form_columns = column_list = ('id', 'discount', 'conditions', 'username', 'createTime', 'orderId')

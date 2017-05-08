@@ -18,7 +18,7 @@ api = Api(
 
 api.add_namespace(ns1, path='/api/users')
 api.add_namespace(ns2, path='/api/movies')
-api.add_namespace(ns3, path='/api/screen')
+api.add_namespace(ns3, path='/api/screens')
 api.add_namespace(ns4, path='/api/session')
 api.add_namespace(ns5, path='/api/smscode')
 api.add_namespace(ns6, path='/api/password')

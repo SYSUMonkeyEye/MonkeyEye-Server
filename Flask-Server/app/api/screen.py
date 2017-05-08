@@ -1,6 +1,6 @@
 # *-* coding: utf-8 *-*
 from flask import request
-from app.models import Screen
+from app.models import Screen, Order
 from datetime import datetime, date, timedelta
 from flask_restplus import Namespace, Resource
 
@@ -16,7 +16,7 @@ class ScreensResource(Resource):
             return {'message':'Invalid movie id'}, 400
 
         today = date.today()
-        twoday = timedelta(days=2)
+        twoday = timedelta(days=3)
         screens = Screen.query.filter_by(movieId=movieId) \
                               .filter(Screen.time > datetime.now()) \
                               .filter(Screen.time < today + twoday).all()
@@ -33,3 +33,19 @@ class ScreenResource(Resource):
         if screen is None:
             return {'message': 'Screen does not exist'}, 400
         return screen.__json__(), 200
+
+@api.route('/<id>/seats')
+@api.doc(params={'id': '场次id'})
+class ScreenResource(Resource):
+    def get(self, id):
+        """获取场次已预定的座位号"""
+        # screen = Screen.query.get(id)
+        # if screen is None:
+        #     return {'message': 'Screen does not exist'}, 400
+        # screens = Order.query.filter_by(screenId=id).all()
+        # seats = []
+        # for s in screens:
+        #     seats.extend(s.seat.split(','))
+        #
+        # return seats, 200
+        return [10,13,25,40], 200

@@ -8,7 +8,7 @@ from flask_login import login_required, current_user, logout_user
 api = Namespace('password', description='密码模块')
 
 
-@api.route('/')
+@api.route('/loginPassword')
 class Password(Resource):
     @api.doc(parser=api.parser().add_argument('new_password', type=str, required=True, help='新密码md5值', location='form'))
     @login_required
