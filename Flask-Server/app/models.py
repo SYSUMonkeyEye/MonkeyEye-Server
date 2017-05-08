@@ -58,7 +58,6 @@ class Movie(db.Model):
 
     screens = db.relationship('Screen', backref='movies', cascade='all', lazy='dynamic')
     recommends = db.relationship('Recommend', backref='movies', cascade='all', lazy='dynamic')
-    # orders = db.relationship('Order', backref='movies', cascade='all', lazy='dynamic')
     comments = db.relationship('Comment', backref='movies', cascade='all', lazy='dynamic')
     favorites = db.relationship('Favorite', backref='movies', cascade='all', lazy='dynamic')
 
@@ -136,12 +135,11 @@ class Order(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
-    # movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     screenId = db.Column(db.String(32), db.ForeignKey('screens.id'), nullable=False)
-    seat = db.Column(db.String(15), doc='座位号(逗号分隔)', nullable=False)
+    # seat = db.Column(db.String(15), doc='座位号(逗号分隔)', nullable=False)
+    seat = db.Column(db.PickleType, doc='座位号(逗号分隔)', nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
     createTime = db.Column(db.DateTime, doc='创建时间', default=datetime.now(), nullable=False)
-    type = db.Column(db.String(1), doc='订单状态', default='0', nullable=False)
 
 
 class Coupon(db.Model):

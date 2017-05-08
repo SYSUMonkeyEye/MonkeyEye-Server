@@ -42,10 +42,15 @@ class UserModelView(MyModelView):
     form_columns = ('id', 'password', 'payPassword', 'nickname', 'money', 'avatar', 'description')  # 可插入的字段
     form_edit_rules = form_columns[3:]  # 可编辑的字段
     form_overrides = {'avatar': fields.FileField}
-    form_args = {'id': dict(validators=[validators.Regexp('\d{11}', message='Invalid mobile')])}
+    form_args = {
+        'id': {  # id只能11位数字
+            'validators': [validators.Regexp('\d{11}', message='Invalid mobile')]
+        }
+    }
 
     def on_model_change(self, form, user, is_created):
         avatar = form.avatar.data
+        # 用户如果上传头像则进行保存
         if avatar.content_type.startswith('image/'):
             filename = avatar.filename
             filename = '%s%s' % (user.id, filename[filename.rindex('.'):])
@@ -53,13 +58,14 @@ class UserModelView(MyModelView):
             user.avatar = filename
         elif is_created:
             user.avatar = 'MonkeyEye.jpg'
-        else:
+        else:  # 没有上传头像将使用上一次的头像
             user.avatar = form.avatar.object_data
 
         if is_created:  # 新建用户时密码进行两次md5
             user.password = MD5Twice(form.password.data)
 
     def after_model_delete(self, user):
+        # 删除用户时删除用户头像
         os.remove('%s/images/user/%s' % (current_app.static_folder, user.avatar))
 
 
@@ -69,7 +75,11 @@ class MovieModelView(MyModelView):
     form_create_rules = form_columns[1:]
     form_overrides = {'poster': fields.FileField}
     form_args = {
-        'movieType': dict(render_kw={'placeholder': '电影类型, 中文逗号分隔'})
+        'movieType': {
+            'render_kw': {
+                'placeholder': '电影类型, 中文逗号分隔'
+            }
+        }
     }
 
     def on_model_change(self, form, movie, is_created):
@@ -89,27 +99,30 @@ class MovieModelView(MyModelView):
             movie.description = '暂无介绍'
 
     def after_model_change(self, form, movie, is_created):
+        # 电影下架后删除该电影的推荐
         if movie.expired:
             recommend = Recommend.query.get(movie.id)
             if recommend is not None:
                 db.session.delete(recommend)
-            screens = Screen.query.filter_by(movieId=movie.id).all()
-            for s in screens:
-                db.session.delete(s)
-            db.session.commit()
+                db.session.commit()
 
     def after_model_delete(self, movie):
+        # 电影删除后删除电影的海报
         os.remove('%s/images/poster/%s' % (current_app.static_folder, movie.poster))
 
 
 class ScreenModelView(MyModelView):
-    column_list = ('id', 'movies', 'hallNum', 'time', 'price', 'ticketNum')
+    column_list = ('id', 'movies', 'hallNum', 'time', 'price')
     form_columns = column_list[1:]
-    form_edit_rules = form_columns[1:]  # 可编辑的字段
+    form_edit_rules = column_list[2:]  # 可编辑的字段
     form_args = {
         'hallNum': {
             'validators': [validators.Regexp('[1-5]', message='hall number is between 1 and 5')],
             'render_kw': {'placeholder': "放映厅, 1~5"}
+        },
+        'movies': {  # 已上映的未下架的电影可添加场次
+            'query_factory': lambda : Movie.query.filter_by(expired=False)
+                                     .filter(Movie.playingTime < datetime.now())
         }
     }
 
@@ -124,10 +137,11 @@ class ScreenModelView(MyModelView):
         if movie.expired:
             raise ValidationError('movie is expired')
 
-        # 从昨天开始在同个放映厅的场次
+        # 从4个小时前在同个放映厅的场次
         # 判断同个时间段是否有电影在上映
-        yesterday = datetime.today() - timedelta(days=1)
-        screens = Screen.query.filter_by(hallNum=form.hallNum.data).filter(Screen.time > yesterday).all()
+        fourh = datetime.now() - timedelta(hours=4)
+        screens = Screen.query.filter_by(hallNum=form.hallNum.data) \
+                              .filter(Screen.time > fourh).all()
         endtime = time + timedelta(minutes=movie.duration)
 
         for s in screens:
@@ -147,35 +161,67 @@ class ScreenModelView(MyModelView):
 
 
 class RecommendModelView(MyModelView):
-    def on_model_change(self, form, recommend, is_created):
-        if Movie.query.get(form.movies.raw_data[0]).expired:
-            raise ValidationError('This movie is expired')
+    form_args = dict(movies=dict(query_factory=lambda: Movie.query.filter_by(expired=False)))
 
 
 class OrderModelView(MyModelView):
-    column_list = ('id', 'screens', 'seat', 'users', 'createTime', 'type')
-    form_columns = column_list[2:]
-    form_edit_rules = column_list[-1]   # 只能修改订单状态
+    can_edit = False
+    column_list = ('id', 'screens', 'seat', 'users', 'createTime')
+    form_columns = column_list[1:]
+    form_overrides = {'seat':fields.StringField}
     form_args = {
-        'seat': dict(render_kw={'placeholder': '座位号, 英文逗号分隔, 最多4个座位'}),
-        'type': dict(render_kw={'placeholder': '订单状态(0:未支付, 1:已支付, 2:已过期)'},
-                     validators=[validators.Regexp('[012]', message='Invalid order type')])
+        'seat': {
+            'render_kw': {
+                'placeholder': '座位号, 英文逗号分隔, 最多4个座位'
+            }
+        },
+        'type': {
+            'render_kw': {
+                'placeholder': '订单状态(0:未支付, 1:已支付, 2:已过期)'},
+                'validators': [validators.Regexp('[012]', message='Invalid order type')]
+        },
+        'screens': {  # 订单只能预定未开始的场次
+            'query_factory': lambda: Screen.query.filter(Screen.time > datetime.now())
+        }
     }
 
     def on_model_change(self, form, order, is_created):
-        seat = form.seat.data
+        seat_str = form.seat.data
 
         try:
-            seat = map(int, seat.split(','))
+            seat = map(int, seat_str.split(','))
         except Exception as e:
             raise ValidationError('Invalid seat')
 
-        # order.movieId =
+        if len(seat) > 4:
+            raise ValidationError('You can only buy up to 4 tickets')
 
-        # screenId = form.screens.raw_data[0]
-        # seatOrdered
-        # print screenId
-        # raise ValidationError('Test')
+        screenId = form.screens.raw_data[0]
+        screen = Screen.query.filter_by(id=screenId).first()
+        if screen is None:
+            raise ValidationError('screen does not exist')
+
+        if form.createTime.data > screen.time:
+            raise ValidationError('The screen has been played')
+
+        # 获取该场次已出售的座位
+        orders = Order.query.filter_by(screenId=screenId).all()
+        seat_ordered = set()
+        for o in orders:
+            if o is not order:
+                seat_ordered.update(set(o.seat))
+
+        if len(seat_ordered) == screen.hallNum:
+            raise ValidationError('The tickets have sold out')
+
+        err = []
+        for s in seat:
+            if s in seat_ordered:
+                err.append(s)
+        if len(err):
+            raise ValidationError('Seat %r have been ordered' % err)
+
+        order.seat = seat
 
 
 class CouponModelView(MyModelView):

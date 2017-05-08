@@ -2,10 +2,10 @@
 from api import api
 from flask import Flask
 from config import config
+import flask_login as login
 from models import db, User
 from functools import wraps
 from utils import MD5Twice, isAdmin
-from admin.admin import admin, init_login, login
 
 def swagger_login(func):
     @wraps(func)
@@ -36,6 +36,8 @@ def create_app(config_name):
         user.nickname = '管理员'
         db.session.add(user)
         db.session.commit()
+
+    from admin.admin import admin, init_login
 
     init_login(app)
     admin.init_app(app)
