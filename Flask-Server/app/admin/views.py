@@ -99,6 +99,7 @@ class MovieModelView(MyModelView):
 class ScreenModelView(MyModelView):
     column_list = ('id', 'movies', 'hallNum', 'time', 'price', 'ticketNum')
     form_columns = column_list[1:]
+    form_edit_rules = form_columns[1:]  # 可编辑的字段
     form_args = {'hallNum': dict(validators=[validators.Regexp('[1-5]', message='hall number is between 1 and 5')])}
 
     def on_model_change(self, form, screen, is_created):
@@ -129,6 +130,9 @@ class ScreenModelView(MyModelView):
                 continue
 
             raise ValidationError('%r is playing in the same hall at this time' % movie)
+
+        if is_created:
+            screen.id = uuid4().hex
 
 
 class RecommendModelView(MyModelView):
