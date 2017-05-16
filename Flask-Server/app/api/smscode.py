@@ -19,14 +19,14 @@ class SmsCode(Resource):
         """获取短信验证码"""
         mobile = request.args.get('mobile', '')
         if not isValid(mobile, 11):
-            return {'message': 'Invalid Mobile'}, 400
+            return {'message': '手机号码非法'}, 233
 
         info = mobile_code.get(mobile, None)
         now = datetime.now()
 
-        # 90秒可请求一次短信验证码
-        if info is not None and (now - info.get('lasttime')).seconds < 90:
-            return {'message': 'Too Many Requests'}, 429
+        # 60秒可请求一次短信验证码
+        if info is not None and (now - info.get('lasttime')).seconds < 60:
+            return {'message': '频繁请求'}, 233
 
         req = top.api.AlibabaAliqinFcSmsNumSendRequest()
         APPKEY = current_app.config['APPKEY']
@@ -48,10 +48,8 @@ class SmsCode(Resource):
                 })
                 return {'message': code}, 200
 
-            return {'message': res['err_code']}, 400
+            return {'message': res['err_code']}, 233
 
         except Exception as e:
             print(e)
             return {'message': str(e)}, 500
-
-

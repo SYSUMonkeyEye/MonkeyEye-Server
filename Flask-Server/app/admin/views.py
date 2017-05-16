@@ -128,10 +128,9 @@ class ScreenModelView(MyModelView):
 
     def on_model_change(self, form, screen, is_created):
         time = form.time.data
-        movieId = form.movies.raw_data[0]
         if time < datetime.now():
             raise ValidationError('time has passed')
-        movie = Movie.query.get(movieId)
+        movie = Movie.query.get(screen.movieId)
         if movie is None:
             raise ValidationError('movie does not exist')
         if movie.expired:
@@ -211,7 +210,7 @@ class OrderModelView(MyModelView):
             if o is not order:
                 seat_ordered.update(set(o.seat))
 
-        if len(seat_ordered) == screen.hallNum:
+        if len(seat_ordered) == screen.ticketNum:
             raise ValidationError('The tickets have sold out')
 
         err = []

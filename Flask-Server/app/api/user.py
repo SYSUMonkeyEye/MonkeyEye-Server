@@ -9,12 +9,6 @@ api = Namespace('user', description='用户模块')
 
 @api.route('/')
 class UsersResource(Resource):
-
-    # def get(self):
-    #     """获取用户列表"""
-    #     result = [user.__json__() for user in User.query.filter_by(isAdmin=False).all()]
-    #     return result, 200
-
     @api.doc(parser=api.parser()
              .add_argument('id', required=True, help='手机号码', location='form')
              .add_argument('password', required=True, help='密码的md5值', location='form')
@@ -29,18 +23,18 @@ class UsersResource(Resource):
         # 校验手机和短信验证码
         res = checkMobileAndCode(mobile, smscode)
         if not res[0]:
-            return res[1], 400
+            return res[1], 233
 
         if User.query.get(mobile) is not None:
-            return {'message': 'User already exists'}, 400
+            return {'message': '手机号码已被注册'}, 233
 
-        password = form.get('password', None)
+        password = form.get('password', '')
         if not checkPassword(password):
-            return {'message': 'Invalid password'}, 400
+            return {'message': '密码非法'}, 233
 
-        payPassword = form.get('payPassword', None)
+        payPassword = form.get('payPassword', '')
         if not checkPassword(payPassword):
-            return {'message': 'Invalid payPassword'}, 400
+            return {'message': '支付密码非法'}, 233
 
         user = User()
         user.id = mobile
@@ -49,55 +43,38 @@ class UsersResource(Resource):
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        return {'message': 'Register successfully'}, 200
+        return {'message': '注册成功'}, 200
 
 
-@api.route('/<id>')
-@api.doc(params={'id': '手机号码'})
-class UserResource(Resource):
-    def get(self, id):
-        """获取用户信息"""
-        if not isValid(id, 11):
-            return {'message': 'Invalid mobile'}, 400
+    @login_required
+    def get(self):
+        """获取用户信息(需登录)"""
+        return current_user.__json__(), 200
 
-        user = User.query.get(id)
-        if user is None:
-            return {'message': 'User does not exist'}, 400
-        return user.__json__(), 200
 
     @api.doc(parser=api.parser()
              .add_argument('nickname', help='昵称', location='form')
              .add_argument('description', help='个性签名', location='form')
              .add_argument('avatar', help='头像', location='files'))
     @login_required
-    def patch(self, id):
-        """修改用户信息"""
-        if not current_user.isAdmin and current_user.id != id:
-            return {'message': 'Forbidden'}, 403
-
-        if not isValid(id, 11):
-            return {'message': 'Invalid mobile'}, 400
-
-        user = User.query.get(id)
-        if user is None:
-            return {'message': 'User does not exist'}, 400
-
+    def patch(self):
+        """修改用户信息(需登录)"""
         form = request.form
-        nickname = form.get('nickname', None)
-        description = form.get('description', None)
+        nickname = form.get('nickname', '').strip()
+        description = form.get('description', '').strip()
         avatar = request.files.get('avatar', None)
 
-        if nickname is not None and len(nickname):
-            user.nickname = nickname
+        if len(nickname):
+            current_user.nickname = nickname
 
-        if description is not None and len(description):
-            user.description = description
+        if len(description):
+            current_user.description = description
 
         if avatar is not None and avatar.content_type.startswith('image/'):
             filename = avatar.filename
             filename = "%s%s" % (id, filename[filename.rindex('.'):])
             avatar.save('%s/images/user/%s' % (current_app.static_folder, filename))
-            user.avatar = filename
+            current_user.avatar = filename
 
         db.session.commit()
-        return {'message':'Modify successfully'}, 200
+        return {'message':'用户信息修改成功'}, 200

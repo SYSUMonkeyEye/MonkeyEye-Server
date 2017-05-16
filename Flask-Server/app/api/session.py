@@ -12,30 +12,26 @@ api = Namespace('session', description='会话模块')
 class Session(Resource):
     @api.doc(parser=api.parser()
             .add_argument('id', type=str, required=True, help='手机号码', location='form')
-            .add_argument('password', type=str, required=True, help='密码的MD5摘要', location='form'))
+            .add_argument('password', type=str, required=True, help='密码的md5值', location='form'))
     def post(self):
         """用户登入"""
         form = request.form
         mobile = form.get('id', '')
 
-        if not isValid(mobile, 11):
-            return {'message':'Invalid user name'}, 400
-
         user = User.query.get(mobile)
         if user is None:
-            return {'message':'User does not exist'}, 400
+            return {'message':'用户不存在'}, 233
 
-        password = form.get('password', None)
+        password = form.get('password', '')
         if user.password != MD5(password):
-            return {'message':'Wrong password'}, 400
+            return {'message':'密码错误'}, 233
 
         login_user(user)
-        return {'message': 'Login successfully'}, 200
-
+        return {'message': '登录成功'}, 200
 
     @login_required
     def delete(self):
-        """用户登出"""
+        """用户登出(需登录)"""
         if not current_user.isAdmin:
             logout_user()
-        return {'message': 'Logout successfully'}, 200
+        return {'message': '退出登录成功'}, 200

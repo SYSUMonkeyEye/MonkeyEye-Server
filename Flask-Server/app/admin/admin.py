@@ -16,7 +16,7 @@ def init_login(app):
 
     @login_manager.unauthorized_handler
     def unauthorized_callback():
-        return make_response(jsonify({'message':'Unauthorized. Login first'}), 401)
+        return make_response(jsonify({'message':'请先登录'}), 233)
 
 
 admin = Admin(name='猿眼管理系统', template_mode='bootstrap3',

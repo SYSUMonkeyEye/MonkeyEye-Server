@@ -6,7 +6,7 @@ from flask_login import current_user
 
 mobile_code = {}
 isValid = lambda x, y: len(x) == y and x.isdigit()
-checkPassword = lambda s: s is not None and s.isalnum() and len(s)
+checkPassword = lambda s: s.isalnum()
 MD5 = lambda s: md5(s).hexdigest()
 MD5Twice = lambda s: MD5(MD5(s))
 
@@ -20,24 +20,24 @@ def isAdmin():
 # 检查短信验证码, 10分钟内有效
 def checkMobileAndCode(mobile, code):
     if not isValid(mobile, 11):
-        return False, {'message': 'Invalid mobile'}
+        return False, {'message': '手机号码非法'}
 
     if not isValid(code, 6):
-        return False, {'message': 'Invalid smscode'}
+        return False, {'message': '验证码非法'}
 
     info = mobile_code.get(mobile, None)
     if info is None:
-        return False, {'message': 'Get smscode first'}
+        return False, {'message': '请先获取短信验证码'}
 
     if info.get('code', 0) != int(code):
-        return False, {'message': 'Wrong smscode'}
+        return False, {'message': '验证码错误'}
 
     mobile_code.pop(mobile)
     now = datetime.now()
     if (now - info.get('lasttime')).seconds < 600:
         return True,
 
-    return False, {'message': 'Expired smscode'}
+    return False, {'message': '验证码已过期'}
 
 
 #  每隔一个小时删除已过期的手机信息

@@ -139,6 +139,7 @@ class Order(db.Model):
     seat = db.Column(db.PickleType, doc='座位号(逗号分隔)', nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
     createTime = db.Column(db.DateTime, doc='创建时间', default=datetime.now(), nullable=False)
+    status = db.Column(db.Boolean, doc='订单状态(0:未支付,1:已支付)', default=0, nullable=False)
 
     def __repr__(self):
         screen = Screen.query.get(self.screenId)
@@ -172,8 +173,9 @@ class Coupon(db.Model):
     conditions = db.Column(db.DECIMAL, nullable=False, doc='满多少元可用')
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
     createTime = db.Column(db.DateTime, nullable=False, default=datetime.now(), doc='创建时间')
+    expiredTime = db.Column(db.DateTime, nullable=False, doc='过期时间')
     orderId = db.Column(db.String(32), db.ForeignKey('orders.id'), nullable=False)
-
+    status = db.Column(db.String(1), doc='状态(0:未使用,1:已使用,2:已过期)', default='0', nullable=False)
 
 class Favorite(db.Model):
     """收藏"""

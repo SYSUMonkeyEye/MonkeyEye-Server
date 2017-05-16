@@ -13,19 +13,18 @@ class Password(Resource):
     @api.doc(parser=api.parser().add_argument('new_password', type=str, required=True, help='新密码md5值', location='form'))
     @login_required
     def patch(self):
-        """修改密码"""
+        """修改密码(需登录)"""
         form = request.form
-        new_password = form.get('new_password', None)
+        new_password = form.get('new_password', '')
         if not checkPassword(new_password):
-            return {'message': 'Invalid password'}, 400
+            return {'message': '非法密码'}, 400
 
         if not current_user.isAdmin:
-            user = User.query.get(current_user.id)
-            user.password = MD5(new_password)
+            current_user.password = MD5(new_password)
             db.session.commit()
             logout_user()
 
-        return {'message': 'Modify password successful. Please login again'}, 200
+        return {'message': '密码修改成功，请重新登录'}, 200
 
 
 @api.route('/payPassword')
@@ -33,14 +32,13 @@ class PayPassword(Resource):
     @api.doc(parser=api.parser().add_argument('new_payPassword', type=str, required=True, help='新支付密码md5值', location='form'))
     @login_required
     def patch(self):
-        """修改支付密码"""
+        """修改支付密码(需登录)"""
         form = request.form
-        new_payPassword = form.get('new_payPassword', None)
+        new_payPassword = form.get('new_payPassword', '')
         if not checkPassword(new_payPassword):
-            return {'message': 'Invalid payPassword'}, 400
+            return {'message': '支付密码非法'}, 400
 
-        user = User.query.get(current_user.id)
-        user.payPassword = MD5(new_payPassword)
+        current_user.payPassword = MD5(new_payPassword)
         db.session.commit()
 
-        return {'message': 'Modify payPassword successful.'}, 200
+        return {'message': '支付密码修改成功'}, 200
