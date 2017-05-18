@@ -29,6 +29,7 @@ class Session(Resource):
         login_user(user)
         return {'message': '登录成功'}, 200
 
+
     @login_required
     def delete(self):
         """用户登出(需登录)"""

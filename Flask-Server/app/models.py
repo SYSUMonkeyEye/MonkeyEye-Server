@@ -177,6 +177,7 @@ class Coupon(db.Model):
     orderId = db.Column(db.String(32), db.ForeignKey('orders.id'), nullable=False)
     status = db.Column(db.String(1), doc='状态(0:未使用,1:已使用,2:已过期)', default='0', nullable=False)
 
+
 class Favorite(db.Model):
     """收藏"""
     __tablename__ = 'favorites'

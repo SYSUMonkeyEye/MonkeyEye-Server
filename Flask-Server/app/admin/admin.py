@@ -12,7 +12,7 @@ def init_login(app):
     # Create user loader function
     @login_manager.user_loader
     def load_user(id):
-        return db.session.query(User).get(id)
+        return User.query.get(id)
 
     @login_manager.unauthorized_handler
     def unauthorized_callback():

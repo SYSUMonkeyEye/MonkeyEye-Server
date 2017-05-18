@@ -4,12 +4,12 @@ from ..models import *
 import flask_login as login
 from flask import current_app
 from datetime import timedelta
+from flask_login import login_required
 from ..utils import MD5, MD5Twice, isAdmin
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
 from flask_admin import expose, AdminIndexView, helpers
 from wtforms import form, fields, validators, ValidationError
-
 
 class LoginForm(form.Form):
     """登录表单"""
@@ -258,8 +258,7 @@ class MyAdminIndexView(AdminIndexView):
         return super(MyAdminIndexView, self).index()
 
     @expose('/logout/')
+    @login_required
     def logout_view(self):
-        if isAdmin():
-            login.logout_user()
-
+        login.logout_user()
         return redirect(url_for('.login_view'))
