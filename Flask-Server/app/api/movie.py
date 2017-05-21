@@ -16,7 +16,7 @@ class MoviesResource(Resource):
             return [m.__json__() for m in movies], 200
         else:
             condition = Movie.name.like('%{}%'.format(query))
-            return [m.__json__() for m in movies.filter(condition)]
+            return [m.__json__() for m in movies.filter(condition)], 200
 
 
 @api.route('/<id>')
@@ -26,7 +26,7 @@ class MovieResource(Resource):
         """获取电影信息"""
         movie = Movie.query.get(id)
         if movie is None:
-            return {'message': '电影不存在'}, 400
+            return {'message': '电影不存在'}, 233
         return movie.__json__(), 200
 
 

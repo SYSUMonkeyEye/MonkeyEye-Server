@@ -199,3 +199,14 @@ class Comment(db.Model):
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     content = db.Column(db.Text, nullable=False, doc='评论内容')
     rating = db.Column(db.SmallInteger, nullable=False, doc='电影评分')
+
+    def __repr__(self):
+        return self.id
+
+    def __json__(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'content': self.content,
+            'rating': self.rating
+        }
