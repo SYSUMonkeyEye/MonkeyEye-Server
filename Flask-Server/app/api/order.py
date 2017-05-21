@@ -1,4 +1,5 @@
 # *-* coding: utf-8 *-*
+from ..utils import MD5
 from flask import request
 from datetime import datetime
 from ..models import Order, Screen, db
@@ -93,10 +94,26 @@ class OrderResource(Resource):
         return order.__json__(), 200
 
     @login_required
+    def delete(self, id):
+        """取消订单(需登录)"""
+        order = current_user.orders.filter_by(id=id).first()
+        if order is None:
+            return {'message': '订单不存在'}, 233
+        if order.status:
+            return {'message': '订单已支付，无法取消'}, 233
+        db.session.delete(order)
+        db.session.commit()
+        return {'message':'取消订单成功'}, 200
+
+    @login_required
     @api.doc(parser=api.parser()
-                    .add_argument('couponId', help='优惠券id', location='form'))
+                    .add_argument('couponId', help='优惠券id', location='form')
+                    .add_argument('payPassword', help='支付密码md5值', required=True, location='form'))
     def patch(self, id):
         """订单支付(需登录)"""
+        if current_user.payPassword != MD5(request.form.get('payPassword', '')):
+            return {'message': '支付密码错误'}, 233
+
         order = current_user.orders.filter_by(id=id).first()
         if order is None:
             return {'message': '订单不存在'}, 233
