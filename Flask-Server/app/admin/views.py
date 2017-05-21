@@ -241,7 +241,7 @@ class OrderModelView(MyModelView):
 
 
 class CouponModelView(MyModelView):
-    form_columns = column_list = ('id', 'discount', 'conditions', 'username', 'createTime', 'orderId')
+    form_columns = column_list = ('id', 'discount', 'condition', 'username', 'createTime', 'orderId')
 
 
 class FavoriteModelView(MyModelView):

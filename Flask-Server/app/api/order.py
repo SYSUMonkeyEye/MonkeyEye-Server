@@ -10,6 +10,16 @@ api = Namespace('order', description='订单模块')
 
 @api.route('/')
 class OrdersResource(Resource):
+    def DeleteExpiredOrder(self, oid):
+        db.engine.execute(
+            "CREATE EVENT `%s` \
+            ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 10 MINUTE \
+            ON COMPLETION NOT PRESERVE \
+            ENABLE \
+            DO \
+            DELETE FROM orders WHERE id = '%s' AND status = 0;" % (oid, oid)
+        )
+
     @login_required
     def get(self):
         """获取用户的订单列表(需登录)"""
@@ -63,6 +73,7 @@ class OrdersResource(Resource):
             order.username = current_user.id
             db.session.add(order)
             db.session.commit()
+            self.DeleteExpiredOrder(order.id)
             return {'message':'订单创建成功'}, 200
         except Exception as e:
             print e
@@ -71,7 +82,7 @@ class OrdersResource(Resource):
 
 @api.route('/<id>')
 @api.doc(params={'id': '订单id'})
-class MovieResource(Resource):
+class OrderResource(Resource):
     @login_required
     def get(self, id):
         """获取订单信息(需登录)"""
@@ -80,3 +91,38 @@ class MovieResource(Resource):
             return {'message': '订单不存在'}, 233
 
         return order.__json__(), 200
+
+    @login_required
+    @api.doc(parser=api.parser()
+                    .add_argument('couponId', help='优惠券id', location='form'))
+    def patch(self, id):
+        """订单支付(需登录)"""
+        order = current_user.orders.filter_by(id=id).first()
+        if order is None:
+            return {'message': '订单不存在'}, 233
+
+        if order.status:
+            return {'message': '订单已支付'}, 233
+
+        seats = order.seat
+        price = len(seats) * Screen.query.get(order.screenId).price
+
+        coupon = None
+        couponId = request.form.get('couponId', None)
+        if couponId is not None:
+            coupon = current_user.coupons.filter_by(id=couponId).first()
+            if coupon is None:
+                return {'message': '优惠券不存在'}, 233
+            if price < coupon.conditions:
+                return {'message': '未达到优惠金额'}, 233
+            price = min(0, price - coupon.discount)
+
+        if current_user.money < price:
+            return {'message': '账户余额不足'}, 233
+
+        if coupon is not None:
+            db.session.delete(coupon)
+        order.status = True
+        current_user.money -= price
+        db.session.commit()
+        return {'message':'支付成功'}, 200

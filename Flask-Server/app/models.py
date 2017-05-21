@@ -170,8 +170,8 @@ class Coupon(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=UUID())
-    discount = db.Column(db.DECIMAL, nullable=False, default=0.8, doc='折扣')
-    conditions = db.Column(db.DECIMAL, nullable=False, doc='满多少元可用')
+    discount = db.Column(db.SmallInteger, nullable=False, default=5, doc='折扣')
+    condition = db.Column(db.SmallInteger, nullable=False, doc='满多少元可用')
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
     createTime = db.Column(db.DateTime, nullable=False, default=datetime.now(), doc='创建时间')
     expiredTime = db.Column(db.DateTime, nullable=False, doc='过期时间')
