@@ -1,20 +1,22 @@
 # *-* coding: utf-8 *-*
 import time
+from uuid import uuid4
 from hashlib import md5
 from datetime import datetime
 from flask_login import current_user
 
 mobile_code = {}
-isValid = lambda x, y: len(x) == y and x.isdigit()
-checkPassword = lambda s: s.isalnum()
+UUID = lambda : uuid4().hex
 MD5 = lambda s: md5(s).hexdigest()
 MD5Twice = lambda s: MD5(MD5(s))
+checkPassword = lambda s: s.isalnum()
+isValid = lambda x, y: len(x) == y and x.isdigit()
 
 def isAdmin():
     try:
         if current_user.isAdmin:
             return True
-    except AttributeError as e:
+    except AttributeError:
         return False
 
 # 检查短信验证码, 10分钟内有效

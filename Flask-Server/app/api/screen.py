@@ -18,8 +18,9 @@ class ScreensResource(Resource):
 
         today = date.today()
         twoday = timedelta(days=3)
-        screens = movie.screens.filter(Screen.time > datetime.now()) \
-                               .filter(Screen.time < today + twoday)
+        now = datetime.now()
+        threeday = today + twoday
+        screens = movie.screens.filter(Screen.time > now, Screen.time < threeday)
         return [s.__json__() for s in screens], 200
 
 

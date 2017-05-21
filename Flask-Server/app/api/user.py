@@ -45,7 +45,6 @@ class UsersResource(Resource):
         login_user(user)
         return {'message': '注册成功'}, 200
 
-
     @login_required
     def get(self):
         """获取用户信息(需登录)"""

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
-from uuid import uuid4
+from utils import UUID
 from flask_login import UserMixin
 from datetime import datetime, date
 from flask_sqlalchemy import SQLAlchemy
@@ -44,7 +44,7 @@ class Movie(db.Model):
     __tablename__ = 'movies'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    id = db.Column(db.String(32), primary_key=True, default=UUID())
     expired = db.Column(db.Boolean, doc='是否下架', default=False, nullable=False)
     name = db.Column(db.String(25), doc='电影名称', nullable=False)
     description = db.Column(db.Text, doc='电影介绍', default='暂无介绍', nullable=False)
@@ -83,7 +83,7 @@ class Screen(db.Model):
     __tablename__ = 'screens'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    id = db.Column(db.String(32), primary_key=True, default=UUID())
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     time = db.Column(db.DateTime, doc='场次时间', default=datetime.now(), nullable=False)
     hallNum = db.Column(db.String(1), doc='放映厅(1-5)', nullable=False)
@@ -134,7 +134,7 @@ class Order(db.Model):
     __tablename__ = 'orders'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    id = db.Column(db.String(32), primary_key=True, default=UUID())
     screenId = db.Column(db.String(32), db.ForeignKey('screens.id'), nullable=False)
     seat = db.Column(db.PickleType, doc='座位号(逗号分隔)', nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
@@ -159,7 +159,8 @@ class Order(db.Model):
             'screenId': self.screenId,
             'createTime': time.mktime(self.createTime.timetuple()) * 1000,
             'username': self.username,
-            'seat': self.seat
+            'seat': self.seat,
+            'status': self.status
         }
 
 
@@ -168,7 +169,7 @@ class Coupon(db.Model):
     __tablename__ = 'coupons'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    id = db.Column(db.String(32), primary_key=True, default=UUID())
     discount = db.Column(db.DECIMAL, nullable=False, default=0.8, doc='折扣')
     conditions = db.Column(db.DECIMAL, nullable=False, doc='满多少元可用')
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
@@ -183,7 +184,7 @@ class Favorite(db.Model):
     __tablename__ = 'favorites'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    id = db.Column(db.String(32), primary_key=True, default=UUID())
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
 
@@ -193,7 +194,7 @@ class Comment(db.Model):
     __tablename__ = 'comments'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=uuid4().hex)
+    id = db.Column(db.String(32), primary_key=True, default=UUID())
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     content = db.Column(db.Text, nullable=False, doc='评论内容')

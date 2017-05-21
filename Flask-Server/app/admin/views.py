@@ -4,10 +4,10 @@ from ..models import *
 import flask_login as login
 from flask import current_app
 from datetime import timedelta
-from flask_login import login_required
-from ..utils import MD5, MD5Twice, isAdmin
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
+from ..utils import MD5, MD5Twice, isAdmin, UUID
+from flask_login import login_required, current_user
 from flask_admin import expose, AdminIndexView, helpers
 from wtforms import form, fields, validators, ValidationError
 
@@ -84,7 +84,7 @@ class MovieModelView(MyModelView):
 
     def on_model_change(self, form, movie, is_created):
         poster = form.poster.data
-        movie.id = uuid4().hex if is_created else movie.id
+        movie.id = UUID() if is_created else movie.id
         if poster.content_type.startswith('image/'):
             filename = poster.filename
             filename = '%s%s' % (movie.id, filename[filename.rindex('.'):])
@@ -156,7 +156,7 @@ class ScreenModelView(MyModelView):
             raise ValidationError('%r is playing in the same hall at this time' % movie)
 
         if is_created:
-            screen.id = uuid4().hex
+            screen.id = UUID()
 
 
 class RecommendModelView(MyModelView):
@@ -164,8 +164,8 @@ class RecommendModelView(MyModelView):
 
 
 class OrderModelView(MyModelView):
-    can_edit = False
-    column_list = ('id', 'screens', 'seat', 'users', 'createTime')
+    column_list = ('id', 'screens', 'seat', 'users', 'status', 'createTime')
+    form_edit_rules = ('status',)
     form_columns = column_list[1:]
     form_overrides = {'seat':fields.StringField}
     form_args = {
@@ -174,53 +174,70 @@ class OrderModelView(MyModelView):
                 'placeholder': '座位号, 英文逗号分隔, 最多4个座位'
             }
         },
-        'type': {
-            'render_kw': {
-                'placeholder': '订单状态(0:未支付, 1:已支付, 2:已过期)'},
-                'validators': [validators.Regexp('[012]', message='Invalid order type')]
-        },
+        # 'type': {
+        #     'render_kw': {
+        #         'placeholder': '订单状态(0:未支付, 1:已支付)'},
+        #     'validators': [validators.Regexp('[01]', message='Invalid order type')]
+        # },
         'screens': {  # 订单只能预定未开始的场次
             'query_factory': lambda: Screen.query.filter(Screen.time > datetime.now())
         }
     }
 
+    def DeleteExpiredOrder(self, orderId):
+        db.engine.execute(
+            "CREATE EVENT `%s` \
+            ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 10 MINUTE \
+            ON COMPLETION NOT PRESERVE \
+            ENABLE \
+            DO \
+            DELETE FROM orders WHERE id = '%s' AND status = 0;" % (orderId, orderId)
+        )
+
     def on_model_change(self, form, order, is_created):
-        seat_str = form.seat.data
-
-        try:
-            seat = map(int, seat_str.split(','))
-        except Exception as e:
-            raise ValidationError('Invalid seat')
-
-        if len(seat) > 4:
-            raise ValidationError('You can only buy up to 4 tickets at a time')
-
+        if not is_created:
+            return
+        seat = form.seat.data
         screenId = form.screens.raw_data[0]
-        screen = Screen.query.filter_by(id=screenId).first()
+        screen = Screen.query.get(screenId)
         if screen is None:
             raise ValidationError('screen does not exist')
 
         if form.createTime.data > screen.time:
             raise ValidationError('The screen has been played')
 
+        need_pay_order = current_user.orders.filter_by(status=0).first()
+        if need_pay_order is not None:
+            raise ValidationError('您还有未支付的订单')
+
+        try:
+            seats = map(int, seat.strip().split(','))
+            if len(seats) == 0 or len(filter(lambda x: x < 1 or x > screen.ticketNum, seats)) > 0:
+                raise ValidationError('Invalid seat')
+
+            if len(seats) > 4:
+                raise ValidationError(
+                    'You can only buy up to 4 tickets at a time')
+        except Exception:
+            raise ValidationError('Invalid seat')
+
         # 获取该场次已出售的座位
-        orders = Order.query.filter_by(screenId=screenId).all()
+        orders = Order.query.get(screenId).all()
         seat_ordered = set()
         for o in orders:
             if o is not order:
                 seat_ordered.update(set(o.seat))
 
-        if len(seat_ordered) == screen.ticketNum:
-            raise ValidationError('The tickets have sold out')
-
-        err = []
-        for s in seat:
-            if s in seat_ordered:
-                err.append(s)
+        err = [s for s in seats if s in seat_ordered]
         if len(err):
             raise ValidationError('Seat %r have been ordered' % err)
 
-        order.seat = seat
+        order.seat = seats
+        order.id = UUID()
+
+    def after_model_change(self, form, order, is_created):
+        if is_created:
+            self.DeleteExpiredOrder(order.id)
 
 
 class CouponModelView(MyModelView):
