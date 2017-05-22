@@ -190,6 +190,12 @@ class Favorite(db.Model):
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
 
+    def __json__(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'movieId': self.movieId
+        }
 
 class Comment(db.Model):
     """评论"""
