@@ -2,7 +2,7 @@
 import time
 from utils import UUID
 from flask_login import UserMixin
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -35,7 +35,8 @@ class User(UserMixin, db.Model):
             'id': self.id,
             'nickname': self.nickname,
             'avatar': '/static/images/user/%s' % self.avatar,
-            'description': self.description
+            'description': self.description,
+            'money': self.money
         }
 
 
@@ -54,7 +55,7 @@ class Movie(db.Model):
     playingType = db.Column(db.String(15), doc='放映类型', nullable=False)
     rating = db.Column(db.Float, doc='电影评分', default=0)
     ratingNum = db.Column(db.SmallInteger, doc='评分人数', default=0)
-    poster = db.Column(db.String(40), doc='海报路径')
+    poster = db.Column(db.String(40), doc='海报路径', nullable=False)
 
     screens = db.relationship('Screen', backref='movies', cascade='all', lazy='dynamic')
     recommends = db.relationship('Recommend', backref='movies', cascade='all', lazy='dynamic')
@@ -74,7 +75,8 @@ class Movie(db.Model):
             'playingTime': time.mktime(self.playingTime.timetuple()) * 1000,
             'duration': self.duration,
             'rating': self.rating,
-            'description': self.description
+            'description': self.description,
+            'ratingNum': self.ratingNum
         }
 
 
@@ -140,6 +142,7 @@ class Order(db.Model):
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
     createTime = db.Column(db.DateTime, doc='创建时间', default=datetime.now(), nullable=False)
     status = db.Column(db.Boolean, doc='订单状态(0:未支付,1:已支付)', default=0, nullable=False)
+    couponId = db.Column(db.String(32), db.ForeignKey('coupons.id'))
 
     def __repr__(self):
         screen = Screen.query.get(self.screenId)
@@ -160,7 +163,8 @@ class Order(db.Model):
             'createTime': time.mktime(self.createTime.timetuple()) * 1000,
             'username': self.username,
             'seat': self.seat,
-            'status': self.status
+            'status': self.status,
+            'couponId': self.couponId
         }
 
 
@@ -170,13 +174,11 @@ class Coupon(db.Model):
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
     id = db.Column(db.String(32), primary_key=True, default=UUID())
-    discount = db.Column(db.SmallInteger, nullable=False, default=5, doc='折扣')
-    condition = db.Column(db.SmallInteger, nullable=False, doc='满多少元可用')
+    discount = db.Column(db.SmallInteger, doc='折扣', nullable=False, default=5)
+    condition = db.Column(db.SmallInteger, doc='满多少元可用', default=30, nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
-    createTime = db.Column(db.DateTime, nullable=False, default=datetime.now(), doc='创建时间')
-    expiredTime = db.Column(db.DateTime, nullable=False, doc='过期时间')
-    orderId = db.Column(db.String(32), db.ForeignKey('orders.id'), nullable=False)
-    status = db.Column(db.String(1), doc='状态(0:未使用,1:已使用,2:已过期)', default='0', nullable=False)
+    expiredTime = db.Column(db.Date, doc='过期时间', default=date.today() + timedelta(days=7), nullable=False)
+    status = db.Column(db.Boolean, doc='状态(0:未使用,1:已使用)', default=0, nullable=False)
 
 
 class Favorite(db.Model):

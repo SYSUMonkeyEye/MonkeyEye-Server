@@ -63,6 +63,7 @@ class UserModelView(MyModelView):
 
         if is_created:  # 新建用户时密码进行两次md5
             user.password = MD5Twice(form.password.data)
+            user.payPassword = MD5Twice(form.payPassword.data)
 
     def after_model_delete(self, user):
         # 删除用户时删除用户头像
@@ -84,7 +85,8 @@ class MovieModelView(MyModelView):
 
     def on_model_change(self, form, movie, is_created):
         poster = form.poster.data
-        movie.id = UUID() if is_created else movie.id
+        if is_created:
+            movie.id = UUID()
         if poster.content_type.startswith('image/'):
             filename = poster.filename
             filename = '%s%s' % (movie.id, filename[filename.rindex('.'):])
@@ -128,7 +130,8 @@ class ScreenModelView(MyModelView):
 
     def on_model_change(self, form, screen, is_created):
         time = form.time.data
-        if time < datetime.now():
+        now = datetime.now()
+        if time < now:
             raise ValidationError('time has passed')
         movie = Movie.query.get(screen.movieId)
         if movie is None:
@@ -138,7 +141,7 @@ class ScreenModelView(MyModelView):
 
         # 从4个小时前在同个放映厅的场次
         # 判断同个时间段是否有电影在上映
-        fourh = datetime.now() - timedelta(hours=4)
+        fourh = now - timedelta(hours=4)
         screens = Screen.query.filter_by(hallNum=form.hallNum.data) \
                               .filter(Screen.time > fourh).all()
         endtime = time + timedelta(minutes=movie.duration)
@@ -164,9 +167,9 @@ class RecommendModelView(MyModelView):
 
 
 class OrderModelView(MyModelView):
-    column_list = ('id', 'screens', 'seat', 'users', 'status', 'createTime')
+    column_list = ('id', 'screens', 'seat', 'users', 'status', 'createTime', 'couponId')
     form_edit_rules = ('status',)
-    form_columns = column_list[1:]
+    form_columns = column_list[1:-1]
     form_overrides = {'seat':fields.StringField}
     form_args = {
         'seat': {
@@ -216,8 +219,7 @@ class OrderModelView(MyModelView):
                 raise ValidationError('Invalid seat')
 
             if len(seats) > 4:
-                raise ValidationError(
-                    'You can only buy up to 4 tickets at a time')
+                raise ValidationError('You can only buy up to 4 tickets at a time')
         except Exception:
             raise ValidationError('Invalid seat')
 
@@ -241,11 +243,14 @@ class OrderModelView(MyModelView):
 
 
 class CouponModelView(MyModelView):
-    form_columns = column_list = ('id', 'discount', 'condition', 'username', 'createTime', 'orderId')
+    column_list = ('id', 'status',  'users', 'discount', 'condition', 'expiredTime')
+    form_create_rules = column_list[2:]
+    form_edit_rules = ('status',)
 
 
 class FavoriteModelView(MyModelView):
-    column_list = form_columns = ('id', 'movieId', 'username')
+    column_list = ('id', 'users', 'movies')
+    form_columns = column_list[1:]
 
 
 class CommentModelView(MyModelView):

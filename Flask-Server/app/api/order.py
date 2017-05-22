@@ -93,6 +93,7 @@ class OrderResource(Resource):
 
         return order.__json__(), 200
 
+
     @login_required
     def delete(self, id):
         """取消订单(需登录)"""
@@ -104,6 +105,7 @@ class OrderResource(Resource):
         db.session.delete(order)
         db.session.commit()
         return {'message':'取消订单成功'}, 200
+
 
     @login_required
     @api.doc(parser=api.parser()
@@ -130,6 +132,8 @@ class OrderResource(Resource):
             coupon = current_user.coupons.filter_by(id=couponId).first()
             if coupon is None:
                 return {'message': '优惠券不存在'}, 233
+            if coupon.status:
+                return {'message': '优惠券已使用'}, 233
             if price < coupon.conditions:
                 return {'message': '未达到优惠金额'}, 233
             price = min(0, price - coupon.discount)
@@ -138,7 +142,7 @@ class OrderResource(Resource):
             return {'message': '账户余额不足'}, 233
 
         if coupon is not None:
-            db.session.delete(coupon)
+            coupon.status = True
         order.status = True
         current_user.money -= price
         db.session.commit()

@@ -1,9 +1,9 @@
 # *-* coding: utf-8 *-*
 from flask import request
 from app.utils import UUID
-from flask_login import current_user
 from app.models import Comment, Movie, db
 from flask_restplus import Namespace, Resource
+from flask_login import current_user, login_required
 
 api = Namespace('comment', description='评论模块')
 
@@ -20,11 +20,13 @@ class CommentsResource(Resource):
         return [c.__json__() for c in movie.comments], 200
 
 
+    @login_required
     @api.doc(parser=api.parser()
                     .add_argument('movieId', type=str, required=True, help='电影id', location='form')
                     .add_argument('rating', type=int, required=True, help='评分(1-5)', location='form')
                     .add_argument('content', type=str, required=True, help='评论内容', location='form'))
     def post(self):
+        """发表评论(需登录)"""
         form = request.form
         movieId = form.get('movieId', '')
         movie = Movie.query.get(movieId)
