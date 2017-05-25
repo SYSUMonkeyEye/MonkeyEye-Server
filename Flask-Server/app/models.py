@@ -194,8 +194,9 @@ class Favorite(db.Model):
         return {
             'id': self.id,
             'username': self.username,
-            'movieId': self.movieId
+            'movie': Movie.query.get(self.movieId).__json__()
         }
+
 
 class Comment(db.Model):
     """评论"""

@@ -7,29 +7,34 @@ from flask_login import current_user, login_required
 
 api = Namespace('comment', description='评论模块')
 
+
 @api.route('/')
 class CommentsResource(Resource):
-    @api.doc(parser=api.parser().add_argument('movieId', type=str, required=True, help='电影id', location='args'))
+    @api.doc(parser=api.parser().add_argument(
+        'movieId', type=str, required=True, help='电影id', location='args')
+    )
     def get(self):
         """获取评论列表"""
-        movieId = request.args.get('movieId', '')
-        movie = Movie.query.get(movieId)
+        mid = request.args.get('movieId', '')
+        movie = Movie.query.get(mid)
         if movie is None:
             return {'message': '电影不存在'}, 233
 
         return [c.__json__() for c in movie.comments], 200
 
-
     @login_required
-    @api.doc(parser=api.parser()
-                    .add_argument('movieId', type=str, required=True, help='电影id', location='form')
-                    .add_argument('rating', type=int, required=True, help='评分(1-5)', location='form')
-                    .add_argument('content', type=str, required=True, help='评论内容', location='form'))
+    @api.doc(parser=api.parser().add_argument(
+        'movieId', type=str, required=True, help='电影id', location='form')
+        .add_argument(
+        'rating', type=int, required=True, help='评分(1-5)', location='form')
+        .add_argument(
+        'content', type=str, required=True, help='评论内容', location='form')
+    )
     def post(self):
         """发表评论(需登录)"""
         form = request.form
-        movieId = form.get('movieId', '')
-        movie = Movie.query.get(movieId)
+        mid = form.get('movieId', '')
+        movie = Movie.query.get(mid)
         if movie is None:
             return {'message': '电影不存在'}, 233
 
@@ -38,7 +43,7 @@ class CommentsResource(Resource):
             rating = int(rating)
             if rating < 0 or rating > 5:
                 return {'message': '评分非法'}, 233
-        except Exception:
+        except ValueError:
             return {'message': '评分非法'}, 233
 
         content = form.get('content', '')
@@ -49,7 +54,7 @@ class CommentsResource(Resource):
         comment.id = UUID()
         comment.rating = rating
         comment.content = content
-        comment.movieId = movieId
+        comment.movieId = mid
         comment.username = current_user.id
         db.session.add(comment)
 
@@ -58,7 +63,7 @@ class CommentsResource(Resource):
         movie.rating = (total + rating) / movie.ratingNum
         db.session.commit()
 
-        return {'message':'评论成功'}, 200
+        return {'message': '评论成功', 'id': comment.id}, 200
 
 
 @api.route('/<id>')

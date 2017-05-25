@@ -5,9 +5,12 @@ from flask_restplus import Namespace, Resource
 
 api = Namespace('movie', description='电影模块')
 
+
 @api.route('/')
 class MoviesResource(Resource):
-    @api.doc(parser=api.parser().add_argument('query', type=str, help='电影搜索', location='args'))
+    @api.doc(parser=api.parser().add_argument(
+        'query', type=str, help='电影搜索', location='args')
+    )
     def get(self):
         """获取电影列表"""
         query = request.args.get('query', '')

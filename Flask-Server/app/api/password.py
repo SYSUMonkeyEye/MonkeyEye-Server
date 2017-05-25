@@ -13,9 +13,11 @@ api = Namespace('password', description='密码模块')
 
 @api.route('/loginPassword')
 class Password(Resource):
-    @api.doc(parser=api.parser()
-             .add_argument('password', type=str, required=True, help='原密码md5值', location='form')
-             .add_argument('new_password', type=str, required=True, help='新密码md5值', location='form'))
+    @api.doc(parser=api.parser().add_argument(
+      'password', type=str, required=True, help='原密码md5值', location='form')
+      .add_argument(
+      'new_password', type=str, required=True, help='新密码md5值', location='form')
+    )
     @login_required
     def patch(self):
         """修改密码(需登录)"""
@@ -39,9 +41,11 @@ class Password(Resource):
 
 @api.route('/payPassword')
 class PayPassword(Resource):
-    @api.doc(parser=api.parser()
-                    .add_argument('payPassword', type=str, required=True, help='原支付密码md5值', location='form')
-                    .add_argument('new_payPassword', type=str, required=True, help='新支付密码md5值', location='form'))
+    @api.doc(parser=api.parser().add_argument(
+        'payPassword', type=str, required=True, help='原支付密码md5值', location='form')
+        .add_argument(
+        'new_payPassword', type=str, required=True, help='新支付密码md5值', location='form')
+    )
     @login_required
     def patch(self):
         """修改支付密码(需登录)"""
@@ -59,6 +63,7 @@ class PayPassword(Resource):
         db.session.commit()
 
         return {'message': '支付密码修改成功'}, 200
+
 
 @api.hide
 @api.route('/reset')
@@ -81,9 +86,11 @@ class ResetResource(Resource):
         except Exception:
             return False
 
-    @api.doc(parser=api.parser()
-             .add_argument('id', type=str, required=True, help='手机号码', location='form')
-             .add_argument('type', type=str, required=True, help='密码类型(login/pay)', location='form'))
+    @api.doc(parser=api.parser().add_argument(
+        'id', type=str, required=True, help='手机号码', location='form')
+        .add_argument(
+        'type', type=str, required=True, help='密码类型(login/pay)', location='form')
+    )
     def post(self):
         """重置密码"""
         form = request.form
@@ -99,8 +106,10 @@ class ResetResource(Resource):
         if u is None:
             return {'message': '用户不存在'}, 233
 
-        if self.sendEmail(current_app.config['MAILKEY'],
-                  current_app.config['MAILSERVER'],
-                  u.email, type):
+        if self.sendEmail(
+                current_app.config['MAILKEY'],
+                current_app.config['MAILSERVER'],
+                u.email, type
+        ):
             return {'message': '重置邮件已发送'}, 200
-        return {'message':'邮件发送失败，请稍后再试'}, 233
+        return {'message': '邮件发送失败，请稍后再试'}, 233

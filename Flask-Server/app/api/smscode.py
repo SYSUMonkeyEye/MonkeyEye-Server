@@ -14,7 +14,9 @@ api = Namespace('smscode', description='验证码模块')
 
 @api.route('/')
 class SmsCode(Resource):
-    @api.doc(parser=api.parser().add_argument('mobile', type=str, required=True, help='手机号码', location='args'))
+    @api.doc(parser=api.parser().add_argument(
+        'mobile', type=str, required=True, help='手机号码', location='args')
+    )
     def get(self):
         """获取短信验证码"""
         mobile = request.args.get('mobile', '')

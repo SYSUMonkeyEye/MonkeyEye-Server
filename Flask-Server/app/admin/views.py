@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 from flask_admin import expose, AdminIndexView, helpers
 from wtforms import form, fields, validators, ValidationError
 
+
 class LoginForm(form.Form):
     """登录表单"""
     username = fields.StringField(validators=[validators.data_required()])
@@ -39,7 +40,8 @@ class MyModelView(ModelView):
 
 class UserModelView(MyModelView):
     column_exclude_list = ('password', 'payPassword', 'isAdmin')  # 不显示密码
-    form_columns = ('id', 'password', 'payPassword', 'nickname', 'money', 'avatar', 'description')  # 可插入的字段
+    form_columns = ('id', 'password', 'payPassword', 'nickname',
+                    'money', 'avatar', 'description')  # 可插入的字段
     form_edit_rules = form_columns[3:]  # 可编辑的字段
     form_overrides = {'avatar': fields.FileField}
     form_args = {
@@ -54,7 +56,8 @@ class UserModelView(MyModelView):
         if avatar.content_type.startswith('image/'):
             filename = avatar.filename
             filename = '%s%s' % (user.id, filename[filename.rindex('.'):])
-            avatar.save('%s/images/user/%s' % (current_app.static_folder, filename))
+            url = '%s/images/user/%s' % (current_app.static_folder, filename)
+            avatar.save(url)
             user.avatar = filename
         elif is_created:
             user.avatar = 'MonkeyEye.jpg'
@@ -67,12 +70,15 @@ class UserModelView(MyModelView):
 
     def after_model_delete(self, user):
         # 删除用户时删除用户头像
-        os.remove('%s/images/user/%s' % (current_app.static_folder, user.avatar))
+        if user.avatar != 'MonkeyEye.jpg':
+            url = '%s/images/user/%s' % (current_app.static_folder, user.avatar)
+            os.remove(url)
 
 
 class MovieModelView(MyModelView):
-    column_exclude_list = ('description')
-    form_columns = ('expired', 'name', 'poster', 'description', 'playingTime', 'duration', 'movieType', 'playingType')
+    column_exclude_list = ('description',)
+    form_columns = ('expired', 'name', 'poster', 'description',
+                    'playingTime', 'duration', 'movieType', 'playingType')
     form_create_rules = form_columns[1:]
     form_overrides = {'poster': fields.FileField}
     form_args = {
@@ -90,7 +96,8 @@ class MovieModelView(MyModelView):
         if poster.content_type.startswith('image/'):
             filename = poster.filename
             filename = '%s%s' % (movie.id, filename[filename.rindex('.'):])
-            poster.save('%s/images/poster/%s' % (current_app.static_folder, filename))
+            url = '%s/images/poster/%s' % (current_app.static_folder, filename)
+            poster.save(url)
             movie.poster = filename
         elif is_created:
             raise ValidationError('poster required')
@@ -110,7 +117,8 @@ class MovieModelView(MyModelView):
 
     def after_model_delete(self, movie):
         # 电影删除后删除电影的海报
-        os.remove('%s/images/poster/%s' % (current_app.static_folder, movie.poster))
+        url = '%s/images/poster/%s' % (current_app.static_folder, movie.poster)
+        os.remove(url)
 
 
 class ScreenModelView(MyModelView):
@@ -119,12 +127,14 @@ class ScreenModelView(MyModelView):
     form_edit_rules = column_list[2:]  # 可编辑的字段
     form_args = {
         'hallNum': {
-            'validators': [validators.Regexp('[1-5]', message='hall number is between 1 and 5')],
+            'validators': [validators.Regexp(
+                            '[1-5]', message='hall number is between 1 and 5')],
             'render_kw': {'placeholder': "放映厅, 1~5"}
         },
         'movies': {  # 已上映的未下架的电影可添加场次
-            'query_factory': lambda : Movie.query.filter_by(expired=False)
-                                     .filter(Movie.playingTime < datetime.now())
+            'query_factory':
+                lambda: Movie.query.filter_by(expired=False)
+                                   .filter(Movie.playingTime < datetime.now())
         }
     }
 
@@ -153,24 +163,30 @@ class ScreenModelView(MyModelView):
             # 合法的场次要求
             # 开始时间比其他场次结束时间晚 或者 结束时间比其他场次开始时间早
             m = Movie.query.get(s.movieId)
-            if time > (s.time + timedelta(minutes=m.duration)) or endtime < s.time:
+            if time > (s.time + timedelta(minutes=m.duration))\
+                    or endtime < s.time:
                 continue
 
-            raise ValidationError('%r is playing in the same hall at this time' % movie)
+            raise ValidationError(
+                '%r is playing in the same hall at this time' % movie
+            )
 
         if is_created:
             screen.id = UUID()
 
 
 class RecommendModelView(MyModelView):
-    form_args = dict(movies=dict(query_factory=lambda: Movie.query.filter_by(expired=False)))
+    form_args = dict(movies={
+        'query_factory': lambda: Movie.query.filter_by(expired=False)
+    })
 
 
 class OrderModelView(MyModelView):
-    column_list = ('id', 'screens', 'seat', 'users', 'status', 'createTime', 'couponId')
+    column_list = ('id', 'screens', 'seat', 'users',
+                   'status', 'createTime', 'couponId')
     form_edit_rules = ('status',)
     form_columns = column_list[1:-1]
-    form_overrides = {'seat':fields.StringField}
+    form_overrides = {'seat': fields.StringField}
     form_args = {
         'seat': {
             'render_kw': {
@@ -187,22 +203,23 @@ class OrderModelView(MyModelView):
         }
     }
 
-    def DeleteExpiredOrder(self, orderId):
+    def delete_expired_order(self, oid):
         db.engine.execute(
             "CREATE EVENT `%s` \
             ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 10 MINUTE \
             ON COMPLETION NOT PRESERVE \
             ENABLE \
             DO \
-            DELETE FROM orders WHERE id = '%s' AND status = 0;" % (orderId, orderId)
+            DELETE FROM orders WHERE id = '%s' AND status = 0;" %
+            (oid, oid)
         )
 
     def on_model_change(self, form, order, is_created):
         if not is_created:
             return
         seat = form.seat.data
-        screenId = form.screens.raw_data[0]
-        screen = Screen.query.get(screenId)
+        sid = form.screens.raw_data[0]
+        screen = Screen.query.get(sid)
         if screen is None:
             raise ValidationError('screen does not exist')
 
@@ -215,16 +232,19 @@ class OrderModelView(MyModelView):
 
         try:
             seats = map(int, seat.strip().split(','))
-            if len(seats) == 0 or len(filter(lambda x: x < 1 or x > screen.ticketNum, seats)) > 0:
+            if len(seats) == 0 or len(
+                    filter(lambda x: x < 1 or x > screen.ticketNum, seats)) > 0:
                 raise ValidationError('Invalid seat')
 
             if len(seats) > 4:
-                raise ValidationError('You can only buy up to 4 tickets at a time')
+                raise ValidationError(
+                    'You can only buy up to 4 tickets at a time'
+                )
         except Exception:
             raise ValidationError('Invalid seat')
 
         # 获取该场次已出售的座位
-        orders = Order.query.get(screenId).all()
+        orders = Order.query.get(sid).all()
         seat_ordered = set()
         for o in orders:
             if o is not order:
@@ -239,11 +259,12 @@ class OrderModelView(MyModelView):
 
     def after_model_change(self, form, order, is_created):
         if is_created:
-            self.DeleteExpiredOrder(order.id)
+            self.delete_expired_order(order.id)
 
 
 class CouponModelView(MyModelView):
-    column_list = ('id', 'status',  'users', 'discount', 'condition', 'expiredTime')
+    column_list = ('id', 'status',  'users',
+                   'discount', 'condition', 'expiredTime')
     form_create_rules = column_list[2:]
     form_edit_rules = ('status',)
 

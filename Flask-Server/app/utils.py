@@ -2,15 +2,17 @@
 import time
 from uuid import uuid4
 from hashlib import md5
+from threading import Timer
 from datetime import datetime
 from flask_login import current_user
 
 mobile_code = {}
-UUID = lambda : uuid4().hex
+UUID = lambda: uuid4().hex
 MD5 = lambda s: md5(s).hexdigest()
 MD5Twice = lambda s: MD5(MD5(s))
 checkPassword = lambda s: s.isalnum()
 isValid = lambda x, y: len(x) == y and x.isdigit()
+
 
 def isAdmin():
     try:
@@ -60,6 +62,4 @@ def __popExpiredItems():
 
 
 # 定时器，新开线程，避免阻塞主进程
-from threading import Timer
-
 Timer(0, __popExpiredItems).start()

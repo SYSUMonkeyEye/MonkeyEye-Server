@@ -6,21 +6,27 @@ from flask_restplus import Namespace, Resource
 
 api = Namespace('screen', description='场次模块')
 
+
 @api.route('/')
 class ScreensResource(Resource):
-    @api.doc(parser=api.parser().add_argument('movieId', type=str, required=True, help='电影id', location='args'))
+    @api.doc(parser=api.parser().add_argument(
+        'movieId', type=str, required=True, help='电影id', location='args')
+    )
     def get(self):
         """获取某部电影三天内的场次"""
-        movieId = request.args.get('movieId', '')
-        movie = Movie.query.get(movieId)
+        mid = request.args.get('movieId', '')
+        movie = Movie.query.get(mid)
         if movie is None:
-            return {'message':'电影不存在'}, 233
+            return {'message': '电影不存在'}, 233
 
         today = date.today()
         twoday = timedelta(days=3)
         now = datetime.now()
         threeday = today + twoday
-        screens = movie.screens.filter(Screen.time > now, Screen.time < threeday)
+        screens = movie.screens.filter(
+            Screen.time > now,
+            Screen.time < threeday
+        )
         return [s.__json__() for s in screens], 200
 
 

@@ -7,6 +7,7 @@ from models import db, User
 from functools import wraps
 from utils import MD5Twice, isAdmin
 
+
 def swagger_login(func):
     @wraps(func)
     def login_pass(*args, **kwargs):
