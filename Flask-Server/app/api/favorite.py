@@ -12,7 +12,7 @@ api = Namespace('favorite', description='收藏模块')
 class FavoritesResource(Resource):
     @login_required
     def get(self):
-        """获取收藏列表"""
+        """获取收藏列表(需登录)"""
         return [f.__json__() for f in current_user.favorites], 200
 
     @login_required
@@ -36,7 +36,7 @@ class FavoritesResource(Resource):
         db.session.add(favorite)
         db.session.commit()
 
-        return {'message': '收藏成功', 'id': favorite.id}, 200,
+        return {'message': '收藏成功', 'id': favorite.id}, 200
 
 
 @api.route('/<id>')

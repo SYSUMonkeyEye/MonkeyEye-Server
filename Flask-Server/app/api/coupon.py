@@ -9,5 +9,5 @@ api = Namespace('coupon', description='优惠券模块')
 class CouponsResource(Resource):
     @login_required
     def get(self):
-        """获取优惠券列表"""
+        """获取优惠券列表(需登录)"""
         return [c.__json__() for c in current_user.coupons], 200

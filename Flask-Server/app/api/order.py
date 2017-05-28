@@ -23,7 +23,7 @@ class OrdersResource(Resource):
 
     @login_required
     def get(self):
-        """获取用户的订单列表(需登录)"""
+        """获取订单列表(需登录)"""
         return [o.__json__() for o in current_user.orders], 200
 
     @api.doc(parser=api.parser().add_argument(
@@ -69,7 +69,7 @@ class OrdersResource(Resource):
 
             err = [s for s in seats if s in seat_ordered]
             if len(err):
-                return {'message': '座位 %r 已经被预订' % err}, 233
+                return {'message': '座位 %s 已经被预订' % ','.join(err)}, 233
 
             order = Order()
             order.screenId = sid
@@ -78,7 +78,7 @@ class OrdersResource(Resource):
             db.session.add(order)
             db.session.commit()
             self.delete_expired_order(order.id)
-            return {'message': '订单创建成功', 'order': order.__json__()}, 200
+            return {'message': '订单创建成功', 'id': order.id}, 200
         except Exception as e:
             print e
             return {'message': 'Internal Server Error'}, 500
@@ -146,6 +146,7 @@ class OrderResource(Resource):
 
         if coupon is not None:
             coupon.status = True
+            order.couponId = coupon.id
         order.status = True
         current_user.money -= price
         db.session.commit()
