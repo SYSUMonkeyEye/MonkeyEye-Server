@@ -210,24 +210,23 @@ class OrderModelView(MyModelView):
             ON COMPLETION NOT PRESERVE \
             ENABLE \
             DO \
-            DELETE FROM orders WHERE id = '%s' AND status = 0;" %
-            (oid, oid)
+            DELETE FROM orders WHERE id = '%s' AND status = 0;" % (oid, oid)
         )
 
     def on_model_change(self, form, order, is_created):
         if not is_created:
             return
+
         seat = form.seat.data
         sid = form.screens.raw_data[0]
         screen = Screen.query.get(sid)
-        if screen is None:
-            raise ValidationError('screen does not exist')
 
         if form.createTime.data > screen.time:
             raise ValidationError('The screen has been played')
 
-        need_pay_order = current_user.orders.filter_by(status=0).first()
-        if need_pay_order is not None:
+        user = User.query.get(order.username)
+        need_pay_order = user.orders.filter_by(status=0).first()
+        if need_pay_order is not None and need_pay_order is not order:
             raise ValidationError('您还有未支付的订单')
 
         try:
@@ -244,13 +243,13 @@ class OrderModelView(MyModelView):
             raise ValidationError('Invalid seat')
 
         # 获取该场次已出售的座位
-        orders = Order.query.get(sid).all()
         seat_ordered = set()
-        for o in orders:
+        for o in screen.orders:
             if o is not order:
                 seat_ordered.update(set(o.seat))
 
         err = [s for s in seats if s in seat_ordered]
+        print err
         if len(err):
             raise ValidationError('Seat %r have been ordered' % err)
 
