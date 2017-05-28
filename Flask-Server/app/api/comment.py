@@ -39,15 +39,14 @@ class CommentsResource(Resource):
             return {'message': '电影不存在'}, 233
 
         try:
-            rating = form.get('rating', '')
-            rating = int(rating)
+            rating = int(form.get('rating', ''))
             if rating < 0 or rating > 5:
                 return {'message': '评分非法'}, 233
         except ValueError:
             return {'message': '评分非法'}, 233
 
-        content = form.get('content', '')
-        if len(content.strip()) == 0:
+        content = form.get('content', '').strip()
+        if len(content) == 0:
             return {'message': '评论内容不能为空'}, 233
 
         comment = Comment()

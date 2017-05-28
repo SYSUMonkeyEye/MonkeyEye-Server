@@ -5,10 +5,11 @@ from movie import api as ns2
 from screen import api as ns3
 from order import api as ns4
 from comment import api as ns5
-from session import api as ns6
-from smscode import api as ns7
-from favorite import api as ns8
-from password import api as ns9
+from coupon import api as ns6
+from session import api as ns7
+from smscode import api as ns8
+from favorite import api as ns9
+from password import api as ns10
 
 api = Api(
     title='MonkeyEye',
@@ -24,7 +25,8 @@ api.add_namespace(ns2, path='/api/movies')
 api.add_namespace(ns3, path='/api/screens')
 api.add_namespace(ns4, path='/api/orders')
 api.add_namespace(ns5, path='/api/comments')
-api.add_namespace(ns6, path='/api/session')
-api.add_namespace(ns7, path='/api/smscode')
-api.add_namespace(ns8, path='/api/favorites')
-api.add_namespace(ns9, path='/api/password')
+api.add_namespace(ns6, path='/api/coupons')
+api.add_namespace(ns7, path='/api/session')
+api.add_namespace(ns8, path='/api/smscode')
+api.add_namespace(ns9, path='/api/favorites')
+api.add_namespace(ns10, path='/api/password')

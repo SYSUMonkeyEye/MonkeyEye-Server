@@ -78,7 +78,7 @@ class OrdersResource(Resource):
             db.session.add(order)
             db.session.commit()
             self.delete_expired_order(order.id)
-            return {'message': '订单创建成功', 'id': order.id}, 200
+            return {'message': '订单创建成功', 'order': order.__json__()}, 200
         except Exception as e:
             print e
             return {'message': 'Internal Server Error'}, 500

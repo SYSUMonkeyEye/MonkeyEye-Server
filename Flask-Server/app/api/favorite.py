@@ -21,13 +21,11 @@ class FavoritesResource(Resource):
     )
     def post(self):
         """收藏电影(需登录)"""
-        form = request.form
-        mid = form.get('movieId', '')
+        mid = request.form.get('movieId', '')
         movie = Movie.query.get(mid)
         if movie is None:
             return {'message': '电影不存在'}, 233
         movie = current_user.favorites.filter_by(movieId=mid).first()
-        print movie
         if movie is not None:
             return {'message': '不能重复收藏同部电影'}, 233
 

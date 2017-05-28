@@ -180,6 +180,15 @@ class Coupon(db.Model):
     expiredTime = db.Column(db.Date, doc='过期时间', default=date.today() + timedelta(days=7), nullable=False)
     status = db.Column(db.Boolean, doc='状态(0:未使用,1:已使用)', default=0, nullable=False)
 
+    def __json__(self):
+        return {
+            'id':self.id,
+            'discount': self.discount,
+            'condition': self.condition,
+            'expiredTime': time.mktime(self.expiredTime.timetuple()) * 1000,
+            'status': self.status
+        }
+
 
 class Favorite(db.Model):
     """收藏"""
