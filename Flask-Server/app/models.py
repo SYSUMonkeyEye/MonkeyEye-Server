@@ -45,7 +45,7 @@ class Movie(db.Model):
     __tablename__ = 'movies'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=UUID())
+    id = db.Column(db.String(32), primary_key=True)
     expired = db.Column(db.Boolean, doc='是否下架', default=False, nullable=False)
     name = db.Column(db.String(25), doc='电影名称', nullable=False)
     description = db.Column(db.Text, doc='电影介绍', default='暂无介绍', nullable=False)
@@ -55,7 +55,7 @@ class Movie(db.Model):
     playingType = db.Column(db.String(15), doc='放映类型', nullable=False)
     rating = db.Column(db.Float, doc='电影评分', default=0)
     ratingNum = db.Column(db.SmallInteger, doc='评分人数', default=0)
-    poster = db.Column(db.String(40), doc='海报路径', nullable=False)
+    poster = db.Column(db.String(40), doc='海报路径')
 
     screens = db.relationship('Screen', backref='movies', cascade='all', lazy='dynamic')
     recommends = db.relationship('Recommend', backref='movies', cascade='all', lazy='dynamic')
@@ -85,7 +85,7 @@ class Screen(db.Model):
     __tablename__ = 'screens'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=UUID())
+    id = db.Column(db.String(32), primary_key=True)
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     time = db.Column(db.DateTime, doc='场次时间', default=datetime.now(), nullable=False)
     hallNum = db.Column(db.String(1), doc='放映厅(1-5)', nullable=False)
@@ -136,7 +136,7 @@ class Order(db.Model):
     __tablename__ = 'orders'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=UUID())
+    id = db.Column(db.String(32), primary_key=True)
     screenId = db.Column(db.String(32), db.ForeignKey('screens.id'), nullable=False)
     seat = db.Column(db.PickleType, doc='座位号(逗号分隔)', nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
@@ -177,11 +177,11 @@ class Coupon(db.Model):
     __tablename__ = 'coupons'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=UUID())
+    id = db.Column(db.String(32), primary_key=True)
     discount = db.Column(db.SmallInteger, doc='折扣', nullable=False, default=5)
     condition = db.Column(db.SmallInteger, doc='满多少元可用', default=30, nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
-    expiredTime = db.Column(db.Date, doc='过期时间', default=date.today() + timedelta(days=7), nullable=False)
+    expiredTime = db.Column(db.Date, doc='过期时间', nullable=False)
     status = db.Column(db.Boolean, doc='状态(0:未使用,1:已使用)', default=0, nullable=False)
 
     def __json__(self):
@@ -199,7 +199,7 @@ class Favorite(db.Model):
     __tablename__ = 'favorites'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=UUID())
+    id = db.Column(db.String(32), primary_key=True)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
 
@@ -216,7 +216,7 @@ class Comment(db.Model):
     __tablename__ = 'comments'
     __table_args__ = {'mysql_engine': 'InnoDB'}  # 支持事务操作和外键
 
-    id = db.Column(db.String(32), primary_key=True, default=UUID())
+    id = db.Column(db.String(32), primary_key=True)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False, doc='手机号码')
     movieId = db.Column(db.String(32), db.ForeignKey('movies.id'), nullable=False)
     content = db.Column(db.Text, nullable=False, doc='评论内容')

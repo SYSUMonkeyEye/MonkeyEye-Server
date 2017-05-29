@@ -93,6 +93,9 @@ class MovieModelView(MyModelView):
         poster = form.poster.data
         if is_created:
             movie.id = UUID()
+        print poster
+        print poster.content_type
+        print form.poster.object_data
         if poster.content_type.startswith('image/'):
             filename = poster.filename
             filename = '%s%s' % (movie.id, filename[filename.rindex('.'):])
@@ -100,7 +103,7 @@ class MovieModelView(MyModelView):
             poster.save(url)
             movie.poster = filename
         elif is_created:
-            raise ValidationError('poster required')
+            raise ValidationError('Poster is required.')
         else:
             movie.poster = form.poster.object_data
 
@@ -139,6 +142,8 @@ class ScreenModelView(MyModelView):
     }
 
     def on_model_change(self, form, screen, is_created):
+        if is_created:
+            screen.id = UUID()
         time = form.time.data
         now = datetime.now()
         if time < now:
@@ -171,9 +176,6 @@ class ScreenModelView(MyModelView):
                 '%r is playing in the same hall at this time' % movie
             )
 
-        if is_created:
-            screen.id = UUID()
-
 
 class RecommendModelView(MyModelView):
     form_args = dict(movies={
@@ -182,9 +184,9 @@ class RecommendModelView(MyModelView):
 
 
 class OrderModelView(MyModelView):
+    can_edit = False
     column_list = ('id', 'status', 'screens', 'seat',
                    'users', 'createTime', 'couponId')
-    form_edit_rules = ('status',)
     form_columns = column_list[2:-1]
     form_overrides = {'seat': fields.StringField}
     form_args = {
@@ -205,7 +207,7 @@ class OrderModelView(MyModelView):
 
     def delete_expired_order(self, oid):
         db.engine.execute(
-            "CREATE EVENT `%s` \
+            "CREATE EVENT IF NOT EXISTS `%s` \
             ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 10 MINUTE \
             ON COMPLETION NOT PRESERVE \
             ENABLE \
@@ -214,9 +216,8 @@ class OrderModelView(MyModelView):
         )
 
     def on_model_change(self, form, order, is_created):
-        if not is_created:
-            return
-
+        if is_created:
+            order.id = UUID()
         seat = form.seat.data
         sid = form.screens.raw_data[0]
         screen = Screen.query.get(sid)
@@ -253,28 +254,50 @@ class OrderModelView(MyModelView):
             raise ValidationError('Seat %r have been ordered' % err)
 
         order.seat = seats
-        order.id = UUID()
 
     def after_model_change(self, form, order, is_created):
         if is_created:
             self.delete_expired_order(order.id)
 
+    def after_model_delete(self, order):
+        if not order.status:
+            db.engine.execute("DROP EVENT IF EXISTS `%s`;" % order.id)
+
 
 class CouponModelView(MyModelView):
+    can_edit = False
     column_list = ('id', 'status',  'users',
                    'discount', 'condition', 'expiredTime')
     form_create_rules = column_list[2:]
-    form_edit_rules = ('status',)
+
+    def on_model_change(self, form, coupon, is_created):
+        if is_created:
+            coupon.id = UUID()
 
 
 class FavoriteModelView(MyModelView):
     column_list = ('id', 'users', 'movies')
     form_columns = column_list[1:]
 
+    def on_model_change(self, form, favorite, is_created):
+        if is_created:
+            favorite.id = UUID()
+
 
 class CommentModelView(MyModelView):
     column_list = ('id', 'movies', 'users', 'content', 'rating')
     form_columns = column_list[1:]
+    form_args = {
+        'rating': {
+            'validators': [validators.Regexp(
+                '[1-5]', message='rating is between 1 and 5')],
+            'render_kw': {'placeholder': "评分, 1~5"}
+        }
+    }
+
+    def on_model_change(self, form, comment, is_created):
+        if is_created:
+            comment.id = UUID()
 
 
 class MyAdminIndexView(AdminIndexView):

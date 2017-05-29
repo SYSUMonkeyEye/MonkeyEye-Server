@@ -1,5 +1,5 @@
 # *-* coding: utf-8 *-*
-from ..utils import MD5
+from ..utils import MD5, UUID
 from flask import request
 from datetime import datetime
 from ..models import Order, Screen, db
@@ -13,7 +13,7 @@ api = Namespace('order', description='订单模块')
 class OrdersResource(Resource):
     def delete_expired_order(self, oid):
         db.engine.execute(
-            "CREATE EVENT `%s` \
+            "CREATE EVENT IF NOT EXISTS `%s` \
             ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 10 MINUTE \
             ON COMPLETION NOT PRESERVE \
             ENABLE \
@@ -72,9 +72,11 @@ class OrdersResource(Resource):
                 return {'message': '座位 %s 已经被预订' % ','.join(err)}, 233
 
             order = Order()
+            order.id = UUID()
             order.screenId = sid
             order.seat = seats
             order.username = current_user.id
+            order.createTime = now
             db.session.add(order)
             db.session.commit()
             self.delete_expired_order(order.id)
