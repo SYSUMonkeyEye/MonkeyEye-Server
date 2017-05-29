@@ -128,7 +128,7 @@ class OrderResource(Resource):
 
         seats = order.seat
         price = len(seats) * Screen.query.get(order.screenId).price
-
+        order.totalPrice = price
         coupon = None
         cid = request.form.get('couponId', None)
         if cid is not None:
@@ -148,6 +148,7 @@ class OrderResource(Resource):
             coupon.status = True
             order.couponId = coupon.id
         order.status = True
+        order.payPrice = price
         current_user.money -= price
         db.session.commit()
         return {'message': '支付成功'}, 200

@@ -140,9 +140,11 @@ class Order(db.Model):
     screenId = db.Column(db.String(32), db.ForeignKey('screens.id'), nullable=False)
     seat = db.Column(db.PickleType, doc='座位号(逗号分隔)', nullable=False)
     username = db.Column(db.String(32), db.ForeignKey('users.id'), nullable=False)
-    createTime = db.Column(db.DateTime, doc='创建时间', default=datetime.now(), nullable=False)
+    createTime = db.Column(db.DateTime, doc='创建时间', nullable=False)
     status = db.Column(db.Boolean, doc='订单状态(0:未支付,1:已支付)', default=0, nullable=False)
     couponId = db.Column(db.String(32), db.ForeignKey('coupons.id'))
+    payPrice = db.Column(db.Float, doc='实际支付', nullable=False)
+    totalPrice = db.Column(db.Float, doc='原价', nullable=False)
 
     def __repr__(self):
         screen = Screen.query.get(self.screenId)
@@ -164,7 +166,9 @@ class Order(db.Model):
             'username': self.username,
             'seat': self.seat,
             'status': self.status,
-            'couponId': self.couponId
+            'couponId': self.couponId,
+            'payPrice': self.payPrice,
+            'totalPrice': self.totalPrice
         }
 
 
@@ -182,7 +186,7 @@ class Coupon(db.Model):
 
     def __json__(self):
         return {
-            'id':self.id,
+            'id': self.id,
             'discount': self.discount,
             'condition': self.condition,
             'expiredTime': time.mktime(self.expiredTime.timetuple()) * 1000,

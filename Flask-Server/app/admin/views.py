@@ -182,10 +182,10 @@ class RecommendModelView(MyModelView):
 
 
 class OrderModelView(MyModelView):
-    column_list = ('id', 'screens', 'seat', 'users',
-                   'status', 'createTime', 'couponId')
+    column_list = ('id', 'status', 'screens', 'seat',
+                   'users', 'createTime', 'couponId')
     form_edit_rules = ('status',)
-    form_columns = column_list[1:-1]
+    form_columns = column_list[2:-1]
     form_overrides = {'seat': fields.StringField}
     form_args = {
         'seat': {
@@ -249,7 +249,6 @@ class OrderModelView(MyModelView):
                 seat_ordered.update(set(o.seat))
 
         err = [s for s in seats if s in seat_ordered]
-        print err
         if len(err):
             raise ValidationError('Seat %r have been ordered' % err)
 
