@@ -22,7 +22,6 @@ class CommentsResource(Resource):
 
         return [c.__json__() for c in movie.comments], 200
 
-    @login_required
     @api.doc(parser=api.parser().add_argument(
         'movieId', type=str, required=True, help='电影id', location='form')
         .add_argument(
@@ -30,6 +29,7 @@ class CommentsResource(Resource):
         .add_argument(
         'content', type=str, required=True, help='评论内容', location='form')
     )
+    @login_required
     def post(self):
         """发表评论(需登录)"""
         form = request.form

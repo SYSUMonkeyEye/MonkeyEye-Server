@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
-from utils import UUID
 from flask_login import UserMixin
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()

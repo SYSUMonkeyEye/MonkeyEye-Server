@@ -4,10 +4,10 @@ from ..models import *
 import flask_login as login
 from flask import current_app
 from datetime import timedelta
+from flask_login import login_required
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
 from ..utils import MD5, MD5Twice, isAdmin, UUID
-from flask_login import login_required, current_user
 from flask_admin import expose, AdminIndexView, helpers
 from wtforms import form, fields, validators, ValidationError
 

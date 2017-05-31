@@ -1,9 +1,9 @@
 # *-* coding: utf-8 *-*
-from app.utils import *
 from app.models import db, User
 from flask import request, current_app
 from flask_restplus import Namespace, Resource
-from flask_login import login_user, login_required
+from app.utils import checkPassword, checkMobileAndCode, MD5
+from flask_login import login_user, login_required, current_user
 
 api = Namespace('user', description='用户模块')
 

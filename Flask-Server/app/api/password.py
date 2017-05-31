@@ -4,8 +4,8 @@ from flask import request
 from ..models import db, User
 from flask import current_app
 from email.mime.text import MIMEText
-from ..utils import checkPassword, MD5, isValid
 from flask_restplus import Resource, Namespace
+from ..utils import checkPassword, MD5, isValid
 from flask_login import login_required, current_user, logout_user
 
 api = Namespace('password', description='密码模块')

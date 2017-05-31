@@ -10,4 +10,5 @@ class CouponsResource(Resource):
     @login_required
     def get(self):
         """获取优惠券列表(需登录)"""
-        return [c.__json__() for c in current_user.coupons], 200
+        coupons = current_user.coupons.filter_by(status=0)
+        return [c.__json__() for c in coupons], 200

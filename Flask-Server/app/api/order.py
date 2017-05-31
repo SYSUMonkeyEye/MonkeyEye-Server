@@ -1,26 +1,50 @@
 # *-* coding: utf-8 *-*
-from ..utils import MD5, UUID
 from flask import request
-from datetime import datetime
-from ..models import Order, Screen, db
+from random import randint
+from ..utils import MD5, UUID
+from datetime import datetime, timedelta
+from ..models import Order, Screen, db, Coupon
 from flask_restplus import Namespace, Resource
 from flask_login import login_required, current_user
 
 api = Namespace('order', description='订单模块')
 
 
+def new_coupon():
+    # 40%概率获得优惠券
+    num = randint(1, 10)
+    if num > 6:
+        c = Coupon()
+        c.id = UUID()
+        c.status = False
+        c.username = current_user.id
+        expired_time = datetime.today() + timedelta(days=randint(7, 15))
+        c.expiredTime = expired_time
+        if num % 3:
+            c.condition = 30
+            c.discount = 5
+        else:
+            c.condition = 50
+            c.discount = 12
+        db.session.add(c)
+        db.session.commit()
+        return c.__json__()
+    return None
+
+
+def delete_expired_order(oid):
+    db.engine.execute(
+        "CREATE EVENT IF NOT EXISTS `%s` \
+        ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 10 MINUTE \
+        ON COMPLETION NOT PRESERVE \
+        ENABLE \
+        DO \
+        DELETE FROM orders WHERE id = '%s' AND status = 0;" % (oid, oid)
+    )
+
+
 @api.route('/')
 class OrdersResource(Resource):
-    def delete_expired_order(self, oid):
-        db.engine.execute(
-            "CREATE EVENT IF NOT EXISTS `%s` \
-            ON SCHEDULE AT CURRENT_TIMESTAMP + INTERVAL 10 MINUTE \
-            ON COMPLETION NOT PRESERVE \
-            ENABLE \
-            DO \
-            DELETE FROM orders WHERE id = '%s' AND status = 0;" % (oid, oid)
-        )
-
     @login_required
     def get(self):
         """获取订单列表(需登录)"""
@@ -69,7 +93,7 @@ class OrdersResource(Resource):
 
             err = [s for s in seats if s in seat_ordered]
             if len(err):
-                return {'message': '座位 %s 已经被预订' % ','.join(err)}, 233
+                return {'message': '座位 %s 已经被预订' % str(err)[1:-1]}, 233
 
             order = Order()
             order.id = UUID()
@@ -79,7 +103,7 @@ class OrdersResource(Resource):
             order.createTime = now
             db.session.add(order)
             db.session.commit()
-            self.delete_expired_order(order.id)
+            delete_expired_order(order.id)
             return {'message': '订单创建成功', 'id': order.id}, 200
         except Exception as e:
             print e
@@ -110,12 +134,12 @@ class OrderResource(Resource):
         db.session.commit()
         return {'message': '取消订单成功'}, 200
 
-    @login_required
     @api.doc(parser=api.parser().add_argument(
         'couponId', help='优惠券id', location='form')
         .add_argument(
         'payPassword', help='支付密码md5值', required=True, location='form')
     )
+    @login_required
     def patch(self, id):
         """订单支付(需登录)"""
         if current_user.payPassword != MD5(request.form.get('payPassword', '')):
@@ -149,8 +173,10 @@ class OrderResource(Resource):
         if coupon is not None:
             coupon.status = True
             order.couponId = coupon.id
+
         order.status = True
         order.payPrice = price
         current_user.money -= price
+
         db.session.commit()
-        return {'message': '支付成功'}, 200
+        return {'message': '支付成功', 'coupon': new_coupon()}, 200

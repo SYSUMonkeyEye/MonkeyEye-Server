@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from views import *
-from flask import jsonify, make_response
 from flask_admin import Admin
+from flask import jsonify, make_response
 
 
 def init_login(app):

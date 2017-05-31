@@ -15,10 +15,10 @@ class FavoritesResource(Resource):
         """获取收藏列表(需登录)"""
         return [f.__json__() for f in current_user.favorites], 200
 
-    @login_required
     @api.doc(parser=api.parser().add_argument(
         'movieId', type=str, required=True, help='电影id', location='form')
     )
+    @login_required
     def post(self):
         """收藏电影(需登录)"""
         mid = request.form.get('movieId', '')
