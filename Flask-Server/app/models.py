@@ -161,6 +161,7 @@ class Order(db.Model):
         return {
             'id': self.id,
             'screenId': self.screenId,
+            'screenTime': Screen.query.get(self.screenId).time,
             'createTime': time.mktime(self.createTime.timetuple()) * 1000,
             'username': self.username,
             'seat': self.seat,
