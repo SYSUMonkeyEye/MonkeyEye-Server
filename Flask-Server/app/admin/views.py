@@ -8,9 +8,9 @@ from flask_login import login_required
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
 from ..utils import MD5, MD5Twice, isAdmin, UUID
+from wtforms_components import DateRange, TimeRange
 from flask_admin import expose, AdminIndexView, helpers
 from wtforms import form, fields, validators, ValidationError
-
 
 class LoginForm(form.Form):
     """登录表单"""
@@ -86,6 +86,9 @@ class MovieModelView(MyModelView):
             'render_kw': {
                 'placeholder': '电影类型, 中文逗号分隔'
             }
+        },
+        'playingTime': {
+            'validators': [DateRange(min=date.today())]
         }
     }
 
@@ -93,9 +96,7 @@ class MovieModelView(MyModelView):
         poster = form.poster.data
         if is_created:
             movie.id = UUID()
-        print poster
-        print poster.content_type
-        print form.poster.object_data
+
         if poster.content_type.startswith('image/'):
             filename = poster.filename
             filename = '%s%s' % (movie.id, filename[filename.rindex('.'):])
@@ -138,22 +139,24 @@ class ScreenModelView(MyModelView):
             'query_factory':
                 lambda: Movie.query.filter_by(expired=False)
                                    .filter(Movie.playingTime < datetime.now())
+        },
+        'time': {
+            'validators': [TimeRange(min=datetime.now())]
         }
     }
 
     def on_model_change(self, form, screen, is_created):
         if is_created:
             screen.id = UUID()
-        time = form.time.data
-        now = datetime.now()
-        if time < now:
-            raise ValidationError('time has passed')
+
         movie = Movie.query.get(screen.movieId)
         if movie is None:
             raise ValidationError('movie does not exist')
         if movie.expired:
             raise ValidationError('movie is expired')
 
+        time = form.time.data
+        now = datetime.now()
         # 从4个小时前在同个放映厅的场次
         # 判断同个时间段是否有电影在上映
         fourh = now - timedelta(hours=4)
@@ -269,10 +272,16 @@ class CouponModelView(MyModelView):
     column_list = ('id', 'status',  'users',
                    'discount', 'condition', 'expiredTime')
     form_create_rules = column_list[2:]
+    form_args = {
+        'expiredTime': {
+            'validators': [DateRange(min=date.today() + timedelta(days=1))]
+        }
+    }
 
     def on_model_change(self, form, coupon, is_created):
         if is_created:
             coupon.id = UUID()
+
 
 
 class FavoriteModelView(MyModelView):

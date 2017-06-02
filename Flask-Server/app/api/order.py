@@ -163,7 +163,7 @@ class OrderResource(Resource):
                 return {'message': '优惠券不存在'}, 233
             if coupon.status:
                 return {'message': '优惠券已使用'}, 233
-            if price < coupon.conditions:
+            if price < coupon.condition:
                 return {'message': '未达到优惠金额'}, 233
             price = min(0, price - coupon.discount)
 
