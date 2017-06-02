@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import time
+from utils import time2stamp
 from flask_login import UserMixin
 from datetime import datetime, date
 from flask_sqlalchemy import SQLAlchemy
@@ -71,7 +71,7 @@ class Movie(db.Model):
             'poster': '/static/images/poster/%s' % self.poster,
             'movieType': self.movieType,
             'playingType': self.playingType,
-            'playingTime': time.mktime(self.playingTime.timetuple()) * 1000,
+            'playingTime': time2stamp(self.playingTime),
             'duration': self.duration,
             'rating': self.rating,
             'description': self.description,
@@ -106,7 +106,7 @@ class Screen(db.Model):
         return {
             'id': self.id,
             'movie': movie.__json__(),
-            'time': time.mktime(self.time.timetuple()) * 1000,
+            'time': time2stamp(self.time),
             'price': self.price,
             'ticketNum': self.ticketNum,
             'hallNum': self.hallNum,
@@ -126,7 +126,7 @@ class Recommend(db.Model):
         return {
             'movieId': self.movieId,
             'poster': '/static/images/poster/%s' % movie.poster,
-            'playingTime': time.mktime(movie.playingTime.timetuple()) * 1000
+            'playingTime': time2stamp(movie.playingTime)
         }
 
 
@@ -158,10 +158,12 @@ class Order(db.Model):
         return '{name} {time}放映 {hallNum}号厅{seat}座 订单{id}'.format(**res)
 
     def __json__(self):
+        screenTime = Screen.query.get(self.screenId).time
         return {
             'id': self.id,
             'screenId': self.screenId,
-            'createTime': time.mktime(self.createTime.timetuple()) * 1000,
+            'screenTime': time2stamp(screenTime),
+            'createTime': time2stamp(self.createTime),
             'username': self.username,
             'seat': self.seat,
             'status': self.status,
@@ -188,7 +190,7 @@ class Coupon(db.Model):
             'id': self.id,
             'discount': self.discount,
             'condition': self.condition,
-            'expiredTime': time.mktime(self.expiredTime.timetuple()) * 1000,
+            'expiredTime': time2stamp(self.expiredTime),
             'status': self.status
         }
 

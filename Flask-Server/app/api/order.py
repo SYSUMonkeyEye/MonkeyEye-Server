@@ -165,7 +165,7 @@ class OrderResource(Resource):
                 return {'message': '优惠券已使用'}, 233
             if price < coupon.condition:
                 return {'message': '未达到优惠金额'}, 233
-            price = min(0, price - coupon.discount)
+            price = max(0, price - coupon.discount)
 
         if current_user.money < price:
             return {'message': '账户余额不足'}, 233

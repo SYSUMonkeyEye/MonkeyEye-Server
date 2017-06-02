@@ -12,7 +12,7 @@ MD5 = lambda s: md5(s).hexdigest()
 MD5Twice = lambda s: MD5(MD5(s))
 checkPassword = lambda s: s.isalnum()
 isValid = lambda x, y: len(x) == y and x.isdigit()
-
+time2stamp = lambda t: time.mktime(t.timetuple()) * 1000
 
 def isAdmin():
     try:

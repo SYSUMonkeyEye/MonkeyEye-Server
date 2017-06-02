@@ -1,13 +1,18 @@
 aniso8601==1.2.1
 appdirs==1.4.3
 click==6.7
+decorator==4.0.11
 Flask==0.12.1
 Flask-Admin==1.5.0
 Flask-Login==0.4.0
 flask-restplus==0.10.1
 Flask-SQLAlchemy==2.2
 functools32==3.2.3.post2
+gevent==1.2.1
+greenlet==0.4.12
 gunicorn==19.7.1
+infinity==1.4
+intervals==0.8.0
 itsdangerous==0.24
 Jinja2==2.9.6
 jsonschema==2.6.0
@@ -20,5 +25,7 @@ python-dateutil==2.6.0
 pytz==2017.2
 six==1.10.0
 SQLAlchemy==1.1.9
+validators==0.11.3
 Werkzeug==0.12.1
 WTForms==2.1
+WTForms-Components==0.10.3
