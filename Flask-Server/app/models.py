@@ -158,11 +158,15 @@ class Order(db.Model):
         return '{name} {time}放映 {hallNum}号厅{seat}座 订单{id}'.format(**res)
 
     def __json__(self):
-        screenTime = Screen.query.get(self.screenId).time
+        screen = Screen.query.get(self.screenId)
+        movie = Movie.query.get(screen.movieId)
         return {
             'id': self.id,
             'screenId': self.screenId,
-            'screenTime': time2stamp(screenTime),
+            'movieId': movie.id,
+            'duration': movie.duration,
+            'name': movie.name,
+            'screenTime': time2stamp(screen.time),
             'createTime': time2stamp(self.createTime),
             'username': self.username,
             'seat': self.seat,
@@ -227,9 +231,11 @@ class Comment(db.Model):
         return self.id
 
     def __json__(self):
+        avatar = '/static/images/user/%s' % User.query.get(self.username).avatar
         return {
             'id': self.id,
             'username': self.username,
+            'avatar': avatar,
             'content': self.content,
             'rating': self.rating
         }

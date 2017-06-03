@@ -1,9 +1,9 @@
 # *-* coding: utf-8 *-*
-from app.models import db, User
 from flask import request, current_app
+from app.models import db, User, Screen, Movie
 from flask_restplus import Namespace, Resource
-from app.utils import checkPassword, checkMobileAndCode, MD5
 from flask_login import login_user, login_required, current_user
+from app.utils import checkPassword, checkMobileAndCode, MD5, time2stamp
 
 api = Namespace('user', description='用户模块')
 
@@ -82,3 +82,22 @@ class UsersResource(Resource):
 
         db.session.commit()
         return {'message': '用户信息修改成功'}, 200
+
+
+@api.route('/history')
+class HistoryResource(Resource):
+    res = '{name} {time}放映 {hallNum}号厅{seat}座 订单{id}'
+    @login_required
+    def get(self):
+        """获取观影历史(需登录)"""
+        orders = current_user.orders.filter_by(status=1)
+        screens = set([Screen.query.get(o.screenId) for o in orders])
+        movies = set([Movie.query.get(s.movieId) for s in screens])
+        return [{
+                    'movieType': m.movieType,
+                    'name': m.name,
+                    'playingType': m.playingType,
+                    'playingTime': time2stamp(m.playingTime),
+                    'poster': '/static/images/poster/%s' % m.poster,
+                    'id': m.id
+                } for m in movies], 200
