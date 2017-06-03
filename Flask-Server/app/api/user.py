@@ -1,4 +1,6 @@
 # *-* coding: utf-8 *-*
+import os
+from datetime import datetime
 from flask import request, current_app
 from app.models import db, User, Screen, Movie
 from flask_restplus import Namespace, Resource
@@ -75,9 +77,12 @@ class UsersResource(Resource):
 
         if avatar is not None and avatar.content_type.startswith('image/'):
             filename = avatar.filename
-            filename = "%s%s" % (id, filename[filename.rindex('.'):])
-            url = '%s/images/user/%s' % (current_app.static_folder, filename)
-            avatar.save(url)
+            filename = "%s_%d%s" % (current_user.id, time2stamp(datetime.now()), filename[filename.rindex('.'):])
+            url = current_app.static_folder + '/images/user/%s'
+            avatar.save(url % filename)
+            old = current_user.avatar
+            if old != 'MonkeyEye.jpg':
+                os.remove(url % old)
             current_user.avatar = filename
 
         db.session.commit()

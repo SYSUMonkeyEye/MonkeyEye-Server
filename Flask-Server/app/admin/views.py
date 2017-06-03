@@ -55,9 +55,12 @@ class UserModelView(MyModelView):
         # 用户如果上传头像则进行保存
         if avatar.content_type.startswith('image/'):
             filename = avatar.filename
-            filename = '%s%s' % (user.id, filename[filename.rindex('.'):])
-            url = '%s/images/user/%s' % (current_app.static_folder, filename)
-            avatar.save(url)
+            filename = '%s_%d%s' % (user.id, time2stamp(datetime.now()), filename[filename.rindex('.'):])
+            url = current_app.static_folder + '/images/user/%s'
+            avatar.save(url % filename)
+            old = form.avatar.object_data
+            if old != 'MonkeyEye.jpg':
+                os.remove(url % old)
             user.avatar = filename
         elif is_created:
             user.avatar = 'MonkeyEye.jpg'
