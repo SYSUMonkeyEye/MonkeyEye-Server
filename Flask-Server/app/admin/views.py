@@ -325,7 +325,11 @@ class MyAdminIndexView(AdminIndexView):
 
         if helpers.validate_form_on_submit(form):
             user = form.get_user()
+            from flask import session
+
+            print session.items()
             login.login_user(user)
+            print session.items()
 
         if isAdmin():
             return redirect(url_for('.index'))
