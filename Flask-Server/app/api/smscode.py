@@ -2,9 +2,10 @@
 import sys
 import random
 import top.api
+from flask import request
 from datetime import timedelta
 from ..utils import isValid, myRedis
-from flask import request, current_app
+from instance.config import APPKEY, APPSECRET
 from flask_restplus import Resource, Namespace
 
 reload(sys)
@@ -32,8 +33,6 @@ class SmsCode(Resource):
             return {'message': '频繁请求'}, 233
 
         req = top.api.AlibabaAliqinFcSmsNumSendRequest()
-        APPKEY = current_app.config['APPKEY']
-        APPSECRET = current_app.config['APPSECRET']
         req.set_app_info(top.appinfo(APPKEY, APPSECRET))
         req.extend = '123456'
         req.sms_type = 'normal'

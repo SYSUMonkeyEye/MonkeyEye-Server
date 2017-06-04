@@ -8,6 +8,7 @@ import flask_login as login
 from models import db, User
 from functools import wraps
 from datetime import timedelta
+from instance.config import ADMIN, REDIS
 from utils import MD5Twice, isAdmin, UUID
 from werkzeug.datastructures import CallbackDict
 from flask.sessions import SessionInterface, SessionMixin
@@ -28,7 +29,10 @@ class RedisSessionInterface(SessionInterface):
     session_class = RedisSession
 
     def __init__(self, redis=None, prefix='session:'):
-        self.redis = Redis() if redis is None else redis
+        if redis is None:
+            self.redis = Redis(host=REDIS[0], password=REDIS[1])
+        else:
+            self.redis = redis
         self.prefix = prefix
 
     def generate_sid(self):
@@ -86,10 +90,10 @@ def create_app(config_name):
     db.init_app(app)
     db.create_all()
 
-    if User.query.get(app.config['ADMIN'][0]) is None:
+    if User.query.get(ADMIN[0]) is None:
         user = User()
-        user.id = app.config['ADMIN'][0]
-        user.password = MD5Twice(app.config['ADMIN'][1])
+        user.id = ADMIN[0]
+        user.password = MD5Twice(ADMIN[1])
         user.isAdmin = True
         user.nickname = '管理员'
         db.session.add(user)

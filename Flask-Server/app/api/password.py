@@ -2,9 +2,9 @@
 import smtplib
 from flask import request
 from ..models import db, User
-from flask import current_app
 from email.mime.text import MIMEText
 from flask_restplus import Resource, Namespace
+from instance.config import MAILKEY, MAILSERVER
 from ..utils import checkPassword, MD5, isValid
 from flask_login import login_required, current_user, logout_user
 
@@ -106,10 +106,6 @@ class ResetResource(Resource):
         if u is None:
             return {'message': '用户不存在'}, 233
 
-        if self.sendEmail(
-                current_app.config['MAILKEY'],
-                current_app.config['MAILSERVER'],
-                u.email, type
-        ):
+        if self.sendEmail(MAILKEY, MAILSERVER, u.email, type):
             return {'message': '重置邮件已发送'}, 200
         return {'message': '邮件发送失败，请稍后再试'}, 233

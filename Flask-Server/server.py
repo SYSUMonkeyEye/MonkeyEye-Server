@@ -10,4 +10,4 @@ def MethodNotAllowed(e):
 
 
 if __name__ == '__main__':
-    app.run(host=app.config.get('HOST', '127.0.0.1'), use_reloader=False)
+    app.run(host=app.config.get('HOST'), use_reloader=False)

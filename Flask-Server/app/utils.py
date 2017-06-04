@@ -3,10 +3,11 @@ import time
 from uuid import uuid4
 from redis import Redis
 from hashlib import md5
+from instance.config import REDIS
 from flask_login import current_user
 
 
-myRedis = Redis()
+myRedis = Redis(host=REDIS[0], password=REDIS[1])
 UUID = lambda: uuid4().hex
 MD5 = lambda s: md5(s).hexdigest()
 MD5Twice = lambda s: MD5(MD5(s))
