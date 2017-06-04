@@ -49,7 +49,7 @@ class UsersResource(Resource):
         user.payPassword = MD5(pay_password)
         db.session.add(user)
         db.session.commit()
-        login_user(user)
+        login_user(user, True)
         return {'message': '注册成功'}, 200
 
     @login_required

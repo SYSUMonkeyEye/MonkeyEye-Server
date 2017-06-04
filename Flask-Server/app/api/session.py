@@ -28,7 +28,7 @@ class Session(Resource):
         if user.password != MD5(password):
             return {'message': '密码错误'}, 233
 
-        login_user(user)
+        login_user(user, True)
         return {'message': '登录成功'}, 200
 
     @login_required

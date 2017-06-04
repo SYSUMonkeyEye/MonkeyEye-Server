@@ -7,6 +7,7 @@ from config import config
 import flask_login as login
 from models import db, User
 from functools import wraps
+from datetime import timedelta
 from utils import MD5Twice, isAdmin, UUID
 from werkzeug.datastructures import CallbackDict
 from flask.sessions import SessionInterface, SessionMixin
@@ -33,7 +34,9 @@ class RedisSessionInterface(SessionInterface):
     def generate_sid(self):
         return UUID()
 
-    def get_redis_expiration_time(self, app, session):
+    def get_redis_expiration_time(self, app, session, permanent=False):
+        if permanent:
+            return timedelta(minutes=10)
         return app.permanent_session_lifetime
 
     def open_session(self, app, request):

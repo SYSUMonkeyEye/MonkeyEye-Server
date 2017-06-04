@@ -2,13 +2,14 @@
 import sys
 import random
 import top.api
-from datetime import datetime
+from datetime import timedelta
+from ..utils import isValid, myRedis
 from flask import request, current_app
-from ..utils import isValid, mobile_code
 from flask_restplus import Resource, Namespace
 
 reload(sys)
 sys.setdefaultencoding('utf-8')  # 解决短信解码问题
+ten_minutes = timedelta(minutes=10)
 api = Namespace('smscode', description='验证码模块')
 
 
@@ -23,11 +24,11 @@ class SmsCode(Resource):
         if not isValid(mobile, 11):
             return {'message': '手机号码非法'}, 233
 
-        info = mobile_code.get(mobile, None)
-        now = datetime.now()
+        name = 'smscode:%s' % mobile
+        code = myRedis.get(name)
 
         # 60秒可请求一次短信验证码
-        if info is not None and (now - info.get('lasttime')).seconds < 60:
+        if code is not None and myRedis.ttl(name) > 540:
             return {'message': '频繁请求'}, 233
 
         req = top.api.AlibabaAliqinFcSmsNumSendRequest()
@@ -45,9 +46,7 @@ class SmsCode(Resource):
             # res = req.getResponse()['alibaba_aliqin_fc_sms_num_send_response']['result']
             # if res['success']:
             if 1:
-                mobile_code.update({
-                    mobile: dict(lasttime=datetime.now(), code=code)
-                })
+                myRedis.setex(name, code, ten_minutes)
                 return {'message': code}, 200
 
             return {'message': res['err_code']}, 233

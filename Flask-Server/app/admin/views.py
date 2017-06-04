@@ -286,7 +286,6 @@ class CouponModelView(MyModelView):
             coupon.id = UUID()
 
 
-
 class FavoriteModelView(MyModelView):
     column_list = ('id', 'users', 'movies')
     form_columns = column_list[1:]
@@ -325,11 +324,7 @@ class MyAdminIndexView(AdminIndexView):
 
         if helpers.validate_form_on_submit(form):
             user = form.get_user()
-            from flask import session
-
-            print session.items()
             login.login_user(user)
-            print session.items()
 
         if isAdmin():
             return redirect(url_for('.index'))
