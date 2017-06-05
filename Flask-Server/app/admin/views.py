@@ -1,13 +1,14 @@
 # *-* coding: utf-8 *-*
 import os
-from ..models import *
+from PIL import Image
+from app.models import *
 import flask_login as login
 from flask import current_app
 from datetime import timedelta
 from flask_login import login_required
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
-from ..utils import MD5, MD5Twice, isAdmin, UUID
+from app.utils import MD5, MD5Twice, isAdmin, UUID
 from wtforms_components import DateRange, TimeRange
 from flask_admin import expose, AdminIndexView, helpers
 from wtforms import form, fields, validators, ValidationError
@@ -52,18 +53,18 @@ class UserModelView(MyModelView):
 
     def on_model_change(self, form, user, is_created):
         avatar = form.avatar.data
+
         # 用户如果上传头像则进行保存
         if avatar.content_type.startswith('image/'):
-            filename = avatar.filename
-            filename = '%s_%d%s' % (user.id, time2stamp(datetime.now()), filename[filename.rindex('.'):])
+            filename = '%s_%d.webp' % (user.id, time2stamp(datetime.now()))
             url = current_app.static_folder + '/images/user/%s'
-            avatar.save(url % filename)
+            Image.open(avatar.stream).save(url % filename)
             old = form.avatar.object_data
-            if old != 'MonkeyEye.jpg':
+            if old != 'MonkeyEye.webp':
                 os.remove(url % old)
             user.avatar = filename
         elif is_created:
-            user.avatar = 'MonkeyEye.jpg'
+            user.avatar = 'MonkeyEye.webp'
         else:  # 没有上传头像将使用上一次的头像
             user.avatar = form.avatar.object_data
 
@@ -73,7 +74,7 @@ class UserModelView(MyModelView):
 
     def after_model_delete(self, user):
         # 删除用户时删除用户头像
-        if user.avatar != 'MonkeyEye.jpg':
+        if user.avatar != 'MonkeyEye.webp':
             url = '%s/images/user/%s' % (current_app.static_folder, user.avatar)
             os.remove(url)
 
@@ -101,10 +102,9 @@ class MovieModelView(MyModelView):
             movie.id = UUID()
 
         if poster.content_type.startswith('image/'):
-            filename = poster.filename
-            filename = '%s%s' % (movie.id, filename[filename.rindex('.'):])
+            filename = '%s.webp' % movie.id
             url = '%s/images/poster/%s' % (current_app.static_folder, filename)
-            poster.save(url)
+            Image.open(poster.stream).save(url % filename)
             movie.poster = filename
         elif is_created:
             raise ValidationError('Poster is required.')

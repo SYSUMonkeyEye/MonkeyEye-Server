@@ -1,10 +1,10 @@
 # *-* coding: utf-8 *-*
 from flask import request
 from random import randint
-from ..utils import MD5, UUID
+from app.utils import MD5, UUID
 from datetime import datetime, timedelta
-from ..models import Order, Screen, db, Coupon
 from flask_restplus import Namespace, Resource
+from app.models import Order, Screen, db, Coupon
 from flask_login import login_required, current_user
 
 api = Namespace('order', description='订单模块')

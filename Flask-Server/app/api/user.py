@@ -1,5 +1,6 @@
 # *-* coding: utf-8 *-*
 import os
+from PIL import Image
 from datetime import datetime
 from flask import request, current_app
 from app.models import db, User, Screen, Movie
@@ -76,12 +77,11 @@ class UsersResource(Resource):
             current_user.description = description
 
         if avatar is not None and avatar.content_type.startswith('image/'):
-            filename = avatar.filename
-            filename = "%s_%d%s" % (current_user.id, time2stamp(datetime.now()), filename[filename.rindex('.'):])
+            filename = '%s_%d.webp' % (current_user.id, time2stamp(datetime.now()))
             url = current_app.static_folder + '/images/user/%s'
-            avatar.save(url % filename)
+            Image.open(avatar.stream).save(url % filename)
             old = current_user.avatar
-            if old != 'MonkeyEye.jpg':
+            if old != 'MonkeyEye.webp':
                 os.remove(url % old)
             current_user.avatar = filename
 

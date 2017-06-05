@@ -18,7 +18,9 @@ Jinja2==2.9.6
 jsonschema==2.6.0
 MarkupSafe==1.0
 MySQL-python==1.2.5
+olefile==0.44
 packaging==16.8
+Pillow==4.1.1
 pyparsing==2.2.0
 python-dateutil==2.6.0
 pytz==2017.2

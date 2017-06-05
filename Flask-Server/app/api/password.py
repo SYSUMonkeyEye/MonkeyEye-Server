@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import smtplib
 from flask import request
-from ..models import db, User
+from app.models import db, User
 from email.mime.text import MIMEText
 from flask_restplus import Resource, Namespace
 from instance.config import MAILKEY, MAILSERVER
-from ..utils import checkPassword, MD5, isValid
+from app.utils import checkPassword, MD5, isValid
 from flask_login import login_required, current_user, logout_user
 
 api = Namespace('password', description='密码模块')

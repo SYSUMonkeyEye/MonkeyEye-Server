@@ -4,7 +4,7 @@ import random
 import top.api
 from flask import request
 from datetime import timedelta
-from ..utils import isValid, myRedis
+from app.utils import isValid, myRedis
 from instance.config import APPKEY, APPSECRET
 from flask_restplus import Resource, Namespace
 
