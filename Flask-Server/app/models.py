@@ -231,11 +231,13 @@ class Comment(db.Model):
         return self.id
 
     def __json__(self):
-        avatar = '/static/images/user/%s' % User.query.get(self.username).avatar
+        user = User.query.get(self.username)
+        avatar = '/static/images/user/%s' % user.avatar
         return {
             'id': self.id,
             'username': self.username,
             'avatar': avatar,
             'content': self.content,
-            'rating': self.rating
+            'rating': self.rating,
+            'nickname': user.nickname
         }
