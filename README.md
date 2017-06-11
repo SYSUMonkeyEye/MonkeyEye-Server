@@ -25,8 +25,8 @@ venv\scripts\activate          # Windows 下
 6. 安装第三方模块
 ```
 pip install -r requirements
-## 运行
 ```
+## 运行
 1. 切换主程序目录
 ```
 cd Flask-Server/
@@ -37,11 +37,7 @@ gunicorn -c gunicornConf.py server:app
 或者
 python server.py
 ```
-3. 管理系统
-运行项目之后访问 http://localhost:5000/admin 进入后台管理系统，访问 http://localhost:5000/swagger 进入 Swagger UI 界面，可查看和测试 API。
-## 注意
-
-运行项目前，需要在Flask-Server目录下新建`instance`目录，并在`instance`目录下新建`__init__.py`文件和`config.py`文件，在`config.py`中添加项目的私密配置
+**注意** 运行项目前，需要在Flask-Server目录下新建`instance`目录，并在`instance`目录下新建`__init__.py`文件和`config.py`文件，在`config.py`中添加项目的私密配置
 ```python
 SECRET_KEY = 密钥
 SQLALCHEMY_DATABASE_URI = 数据库链接
@@ -52,7 +48,10 @@ MAILSERVER = 邮件服务器
 MAILKEY = 邮件服务器key
 REDIS = (redis服务器, redis密码)
 ```
+3. 管理系统
+运行项目之后访问 http://localhost:5000/admin 进入后台管理系统，访问 http://localhost:5000/swagger 进入 Swagger UI 界面，可查看和测试 API。
+
 ## 数据模型
-[数据模型](images/model.webp)
+![数据模型](images/model.webp)
 ## API
-[Swagger UI](images/SwaggerUI.webp)
+![Swagger UI](images/SwaggerUI.webp)
