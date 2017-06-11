@@ -5,15 +5,17 @@ from app.models import *
 import flask_login as login
 from flask import current_app
 from datetime import timedelta
+from flask_wtf import FlaskForm
 from flask_login import login_required
 from flask import request, redirect, url_for
 from flask_admin.contrib.sqla import ModelView
 from app.utils import MD5, MD5Twice, isAdmin, UUID
 from wtforms_components import DateRange, TimeRange
 from flask_admin import expose, AdminIndexView, helpers
-from wtforms import form, fields, validators, ValidationError
+from wtforms import fields, validators, ValidationError
 
-class LoginForm(form.Form):
+
+class LoginForm(FlaskForm):
     """登录表单"""
     username = fields.StringField(validators=[validators.data_required()])
     password = fields.PasswordField(validators=[validators.data_required()])
