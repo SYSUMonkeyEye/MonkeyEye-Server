@@ -49,6 +49,7 @@ MAILKEY = 邮件服务器key
 REDIS = (redis服务器, redis密码)
 ```
 3. 管理系统
+
 运行项目之后访问 http://localhost:5000/admin 进入后台管理系统，访问 http://localhost:5000/swagger 进入 Swagger UI 界面，可查看和测试 API。
 
 ## 数据模型
