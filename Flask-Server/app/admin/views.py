@@ -92,27 +92,24 @@ class MovieModelView(MyModelView):
             'render_kw': {
                 'placeholder': '电影类型, 中文逗号分隔'
             }
-        },
-        'playingTime': {
-            'validators': [DateRange(min=date.today())]
         }
     }
 
     def on_model_change(self, form, movie, is_created):
-        poster = form.poster.data
         if is_created:
             movie.id = UUID()
-
+    
+        poster = form.poster.data
         if poster.content_type.startswith('image/'):
             filename = '%s.webp' % movie.id
             url = '%s/images/poster/%s' % (current_app.static_folder, filename)
-            Image.open(poster.stream).save(url % filename)
+            Image.open(poster.stream).save(url)
             movie.poster = filename
         elif is_created:
             raise ValidationError('Poster is required.')
         else:
             movie.poster = form.poster.object_data
-
+    
         if form.description.data.strip() == '':
             movie.description = '暂无介绍'
 
@@ -131,13 +128,13 @@ class MovieModelView(MyModelView):
 
 
 class ScreenModelView(MyModelView):
+    
     column_list = ('id', 'movies', 'hallNum', 'time', 'price')
     form_columns = column_list[1:]
     form_edit_rules = column_list[2:]  # 可编辑的字段
     form_args = {
         'hallNum': {
-            'validators': [validators.Regexp(
-                            '[1-5]', message='hall number is between 1 and 5')],
+            'validators': [validators.Regexp('[1-5]', message='放映厅号为1~5之间的整数')],
             'render_kw': {'placeholder': "放映厅, 1~5"}
         },
         'movies': {  # 已上映的未下架的电影可添加场次
@@ -153,33 +150,31 @@ class ScreenModelView(MyModelView):
     def on_model_change(self, form, screen, is_created):
         if is_created:
             screen.id = UUID()
-
-        movie = Movie.query.get(screen.movieId)
-        if movie is None:
-            raise ValidationError('movie does not exist')
-        if movie.expired:
-            raise ValidationError('movie is expired')
-
+            mid = form.movies.raw_data[0]
+        else:
+            mid = screen.movieId
+        
+        movie = Movie.query.get(mid)
         time = form.time.data
         now = datetime.now()
         # 从4个小时前在同个放映厅的场次
         # 判断同个时间段是否有电影在上映
         fourh = now - timedelta(hours=4)
-        screens = Screen.query.filter_by(hallNum=form.hallNum.data) \
-                              .filter(Screen.time > fourh).all()
+        with db.session.no_autoflush:
+            screens = Screen.query.filter_by(hallNum=form.hallNum.data) \
+                .filter(Screen.time > fourh).all()
         endtime = time + timedelta(minutes=movie.duration)
-
+    
         for s in screens:
             if s is screen:
                 continue
-
             # 合法的场次要求
             # 开始时间比其他场次结束时间晚 或者 结束时间比其他场次开始时间早
             m = Movie.query.get(s.movieId)
-            if time > (s.time + timedelta(minutes=m.duration))\
-                    or endtime < s.time:
+            if time > (s.time + timedelta(minutes=m.duration)) \
+                or endtime < s.time:
                 continue
-
+        
             raise ValidationError(
                 '%r is playing in the same hall at this time' % movie
             )
@@ -226,18 +221,19 @@ class OrderModelView(MyModelView):
     def on_model_change(self, form, order, is_created):
         if is_created:
             order.id = UUID()
-        seat = form.seat.data
         sid = form.screens.raw_data[0]
         screen = Screen.query.get(sid)
 
         if form.createTime.data > screen.time:
             raise ValidationError('The screen has been played')
-
-        user = User.query.get(order.username)
+        
+        uid = form.users.raw_data[0]
+        user = User.query.get(uid)
         need_pay_order = user.orders.filter_by(status=0).first()
         if need_pay_order is not None and need_pay_order is not order:
             raise ValidationError('您还有未支付的订单')
 
+        seat = form.seat.data
         try:
             seats = map(int, seat.strip().split(','))
             if len(seats) == 0 or len(
@@ -291,10 +287,17 @@ class CouponModelView(MyModelView):
 class FavoriteModelView(MyModelView):
     column_list = ('id', 'users', 'movies')
     form_columns = column_list[1:]
-
+    
     def on_model_change(self, form, favorite, is_created):
         if is_created:
             favorite.id = UUID()
+
+        mid = form.movies.raw_data[0]
+        uid = form.users.raw_data[0]
+        with db.session.no_autoflush:
+            f = Favorite.query.filter_by(username=uid, movieId=mid).first()
+        if f is not None and f is not favorite:
+            raise ValidationError('已经收藏该电影')
 
 
 class CommentModelView(MyModelView):
@@ -302,8 +305,7 @@ class CommentModelView(MyModelView):
     form_columns = column_list[1:]
     form_args = {
         'rating': {
-            'validators': [validators.Regexp(
-                '[1-5]', message='rating is between 1 and 5')],
+            'validators': [validators.NumberRange(min=1, max=5)],
             'render_kw': {'placeholder': "评分, 1~5"}
         }
     }

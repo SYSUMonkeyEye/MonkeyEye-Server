@@ -90,10 +90,12 @@ def create_app(config_name):
     db.init_app(app)
     db.create_all()
 
+
     if User.query.get(ADMIN[0]) is None:
         user = User()
         user.id = ADMIN[0]
         user.password = MD5Twice(ADMIN[1])
+        user.payPassword = MD5Twice(ADMIN[1])
         user.isAdmin = True
         user.nickname = '管理员'
         db.session.add(user)
